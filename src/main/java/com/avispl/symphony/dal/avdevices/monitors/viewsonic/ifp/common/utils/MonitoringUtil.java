@@ -1,5 +1,5 @@
 /** Copyright (c) 2025 AVI-SPL, Inc. All Rights Reserved. */
-package com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.utils;
+package com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.utils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +15,14 @@ import lombok.NoArgsConstructor;
 
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.bases.BaseProperty;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.AdapterMetadata;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceDisplay;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneral;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneralSetting;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.InputSource;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.AdapterMetadata;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Display;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.General;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.GeneralSetting;
 import com.avispl.symphony.dal.util.StringUtils;
 
 /**
@@ -68,6 +75,94 @@ public final class MonitoringUtil {
 	}
 
 	/**
+	 * Generates a general metadata string from the given {@link DeviceGeneral} and {@link General} enum.
+	 * <p>
+	 * Returns an empty value if {@code deviceInformation} is {@code null} or if all mapped properties are unavailable.
+	 *
+	 * @param deviceGeneral the device information source
+	 * @param general the general property enum
+	 * @return the general property string
+	 */
+	public static String mapToGeneral(DeviceGeneral deviceGeneral, General general) {
+		if (deviceGeneral == null) {
+			return null;
+		}
+		return switch (general) {
+			case DEVICE_NAME -> mapToValue(deviceGeneral.getDeviceName());
+			case FIRMWARE_VERSION -> mapToValue(deviceGeneral.getFirmwareVersion());
+			case IP_ADDRESS -> mapToValue(deviceGeneral.getIpAddress());
+			case MAC_ADDRESS -> mapToValue(mapToMacAddress(deviceGeneral.getMacAddress()));
+			case POWER_STATUS -> mapToValue(mapToStatus(deviceGeneral.getPowerStatus(), Constant.OFF_STANDBY, Constant.ON));
+			case SERIAL_NUMBER -> mapToValue(deviceGeneral.getSerialNumber());
+		};
+	}
+
+	/**
+	 * Generates a general setting string from the given {@link DeviceGeneralSetting} and {@link GeneralSetting} enum.
+	 * <p>
+	 * Returns an empty value if {@code deviceGeneralSetting} is {@code null} or if all mapped properties are unavailable.
+	 *
+	 * @param deviceGeneralSetting the device general setting source
+	 * @param generalSetting the general setting property enum
+	 * @return the general setting property string
+	 */
+	public static String mapToGeneralSettings(DeviceGeneralSetting deviceGeneralSetting, GeneralSetting generalSetting) {
+		if (deviceGeneralSetting == null) {
+			return null;
+		}
+		return switch (generalSetting) {
+			case INPUT_SOURCE -> mapToValue(InputSource.getNameByCode(deviceGeneralSetting.getInputSource()));
+//			case PIP_MODE -> mapToValue(mapToStatus(deviceGeneralSetting.getPipMode(), Constant.OFF, Constant.ON));
+			case TILING_MODE -> mapToValue(mapToStatus(deviceGeneralSetting.getTilingMode(), Constant.OFF, Constant.ON));
+			case VOLUME -> mapToValue(Integer.parseInt(deviceGeneralSetting.getVolume()));
+			case VOLUME_MUTE -> mapToValue(mapToStatus(deviceGeneralSetting.getMute(), Constant.UNMUTE, Constant.MUTE));
+		};
+	}
+
+	/**
+	 * Generates a display setting string from the given {@link DeviceDisplay} and {@link Display} enum.
+	 * <p>
+	 * Returns an empty value if {@code deviceDisplay} is {@code null} or if all mapped properties are unavailable.
+	 *
+	 * @param deviceDisplay the device display setting source
+	 * @param display the display setting property enum
+	 * @return the display setting property string
+	 */
+	public static String mapToDisplay(DeviceDisplay deviceDisplay, Display display) {
+		if (deviceDisplay == null) {
+			return null;
+		}
+		return switch (display) {
+			case BACKLIGHT_STATUS -> mapToValue(mapToStatus(deviceDisplay.getBacklightStatus(), Constant.OFF, Constant.ON));
+			case BACKLIGHT -> mapToValue(Integer.parseInt(deviceDisplay.getBacklight()));
+//			case BLUE_LIGHT_FILTER -> mapToValue(Integer.parseInt(deviceDisplay.getBluelightFilter()));
+			case BRIGHTNESS -> mapToValue(Integer.parseInt(deviceDisplay.getBrightness()));
+			case COLOR -> mapToValue(Integer.parseInt(deviceDisplay.getColor()));
+			case CONTRAST -> mapToValue(Integer.parseInt(deviceDisplay.getContrast()));
+//			case HUE -> mapToValue(Integer.parseInt(deviceDisplay.getTint()));
+//			case SHARPNESS -> mapToValue(Integer.parseInt(deviceDisplay.getSharpness()));
+		};
+	}
+
+	private static String mapToMacAddress(String value) {
+		if (StringUtils.isNullOrEmpty(value) || value.length() != 12) {
+			return null;
+		}
+		return value.replaceAll(Constant.MAC_PAIR_REGEX, Constant.MAC_SEPARATOR_REPLACEMENT).toUpperCase();
+	}
+
+	private static String mapToStatus(String value, String offValue, String onValue) {
+		if (StringUtils.isNullOrEmpty(value) || Util.isNonNumeric(value)) {
+			return null;
+		}
+		return switch (value) {
+			case "000" -> offValue;
+			case "001" -> onValue;
+			default -> null;
+		};
+	}
+
+	/**
 	 * Maps the given value to a formatted string using title case for normal text.
 	 * <p>
 	 * Delegates to {@link #mapToValue(Object, boolean)} with {@code isTitleCase = true}.
@@ -105,7 +200,7 @@ public final class MonitoringUtil {
 			if (StringUtils.isNullOrEmpty(str)) {
 				return null;
 			}
-			if (isBooleanValue(str)) {
+			if (Util.isBooleanValue(str)) {
 				return str.toLowerCase();
 			}
 			return isTitleCase ? toTitleCase(str) : str;
@@ -132,7 +227,7 @@ public final class MonitoringUtil {
 		if (StringUtils.isNullOrEmpty(value) || value.equals("null")) {
 			return null;
 		}
-		if (isBooleanValue(value)) {
+		if (Util.isBooleanValue(value)) {
 			return value;
 		}
 
@@ -200,9 +295,5 @@ public final class MonitoringUtil {
 		} catch (Exception e) {
 			return null;
 		}
-	}
-
-	private static boolean isBooleanValue(String value) {
-		return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false");
 	}
 }

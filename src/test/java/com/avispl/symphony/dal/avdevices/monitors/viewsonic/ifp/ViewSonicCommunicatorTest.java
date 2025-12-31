@@ -42,6 +42,7 @@ class ViewSonicCommunicatorTest {
 
 	@Test
 	void testGetMultipleStatistics() throws Exception {
+		this.communicator.setDeviceId("01");
 		this.extendedStatistics = (ExtendedStatistics) this.communicator.getMultipleStatistics().get(0);
 		Map<String, String> statistics = this.extendedStatistics.getStatistics();
 
@@ -50,7 +51,10 @@ class ViewSonicCommunicatorTest {
 
 	private void verifyStatistics(Map<String, String> statistics) {
 		Map<String, Map<String, String>> groups = new LinkedHashMap<>();
+		groups.put(Constant.GENERAL, this.filterGroupStatistics(statistics, null));
 		groups.put(Constant.ADAPTER_METADATA_GROUP, this.filterGroupStatistics(statistics, Constant.ADAPTER_METADATA_GROUP));
+		groups.put(Constant.DISPLAY_GROUP, this.filterGroupStatistics(statistics, Constant.DISPLAY_GROUP));
+		groups.put(Constant.GENERAL_SETTING_GROUP, this.filterGroupStatistics(statistics, Constant.GENERAL_SETTING_GROUP));
 
 		for (Map<String, String> initGroup : groups.values()) {
 			for (Map.Entry<String, String> initStatistics : initGroup.entrySet()) {

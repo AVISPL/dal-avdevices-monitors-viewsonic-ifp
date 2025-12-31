@@ -1,8 +1,10 @@
 /** Copyright (c) 2025 AVI-SPL, Inc. All Rights Reserved. */
-package com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types;
+package com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.bases.BaseProperty;
 
@@ -14,6 +16,7 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.bases.BaseProper
  */
 @RequiredArgsConstructor
 @Getter
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum AdapterMetadata implements BaseProperty {
 	ACTIVE_PROPERTY_GROUPS("ActivePropertyGroups", "adapter.active.property.groups"),
 	ADAPTER_BUILD_DATE("AdapterBuildDate", "adapter.build.date"),
@@ -21,6 +24,6 @@ public enum AdapterMetadata implements BaseProperty {
 	ADAPTER_UPTIME_MIN("AdapterUptime(min)", "adapter.uptime"),
 	ADAPTER_VERSION("AdapterVersion", "adapter.version");
 
-	private final String name;
-	private final String property;
+	String name;
+	String property;
 }
