@@ -112,7 +112,8 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 		if (invalidResponse || isResponseMismatch) {
 			throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_REQUEST.value());
 		}
+		var expectedPrefix = Constant.COMMAND_LENGTH + this.deviceId + command.getType() + command.getCode();
 
-		return normalizedResponse.substring(5);  // remove command length, device id, command type and command code
+		return normalizedResponse.substring(expectedPrefix.length());
 	}
 }
