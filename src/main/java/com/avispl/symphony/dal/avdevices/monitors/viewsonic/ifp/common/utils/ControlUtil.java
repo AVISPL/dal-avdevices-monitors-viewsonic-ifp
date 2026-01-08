@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 
 import com.avispl.symphony.api.dal.dto.control.AdvancedControllableProperty;
 import com.avispl.symphony.api.dal.dto.control.AdvancedControllableProperty.Switch;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.Logger;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceDisplay;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneral;
@@ -32,6 +33,8 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ControlUtil {
+	private static final Logger LOG = Logger.ofClass(ControlUtil.class);
+
 	/**
 	 * Generates a list of {@link AdvancedControllableProperty} for the given {@link DeviceGeneral}.
 	 *
@@ -40,6 +43,7 @@ public final class ControlUtil {
 	 */
 	public static List<AdvancedControllableProperty> getGeneralControllers(DeviceGeneral deviceGeneral) {
 		if (deviceGeneral == null) {
+			LOG.warn("The deviceGeneral is null, returning the empty list");
 			return Collections.emptyList();
 		}
 		return Collections.singletonList(
@@ -55,6 +59,7 @@ public final class ControlUtil {
 	 */
 	public static List<AdvancedControllableProperty> getGeneralSettingsControllers(DeviceGeneralSetting deviceGeneralSetting) {
 		if (deviceGeneralSetting == null) {
+			LOG.warn("The deviceGeneralSetting is null, returning the empty list");
 			return Collections.emptyList();
 		}
 		return List.of(
@@ -74,6 +79,7 @@ public final class ControlUtil {
 	 */
 	public static List<AdvancedControllableProperty> getDisplayControllers(DeviceDisplay deviceDisplay) {
 		if (deviceDisplay == null) {
+			LOG.warn("The deviceDisplay is null, returning the empty list");
 			return Collections.emptyList();
 		}
 		return List.of(
