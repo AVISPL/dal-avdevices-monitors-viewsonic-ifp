@@ -20,10 +20,15 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum GeneralSettingCommand implements BaseCommand {
 	GET_INPUT_SOURCE(Constant.GET_COMMAND_TYPE, "j"),
+	SET_INPUT_SOURCE(Constant.SET_COMMAND_TYPE, "\""),
 	GET_PIP_MODE(Constant.GET_COMMAND_TYPE, "t"),
+	SET_PIP_MODE(Constant.SET_COMMAND_TYPE, "9"),
 	GET_TILING_MODE(Constant.GET_COMMAND_TYPE, "v"),
+	SET_TILING_MODE(Constant.SET_COMMAND_TYPE, "P"),
 	GET_VOLUME(Constant.GET_COMMAND_TYPE, "f"),
-	GET_MUTE(Constant.GET_COMMAND_TYPE, "g");
+	SET_VOLUME(Constant.SET_COMMAND_TYPE, "5"),
+	GET_MUTE(Constant.GET_COMMAND_TYPE, "g"),
+	SET_MUTE(Constant.SET_COMMAND_TYPE, "6");
 
 	String type;
 	String code;

@@ -92,7 +92,7 @@ public final class MonitoringUtil {
 			case FIRMWARE_VERSION -> mapToValue(deviceGeneral.getFirmwareVersion());
 			case IP_ADDRESS -> mapToValue(deviceGeneral.getIpAddress());
 			case MAC_ADDRESS -> mapToValue(mapToMacAddress(deviceGeneral.getMacAddress()));
-			case POWER_STATUS -> mapToValue(mapToStatus(deviceGeneral.getPowerStatus(), Constant.OFF_STANDBY, Constant.ON));
+			case POWER_STATUS -> mapToValue(mapToStatus(deviceGeneral.getPowerStatus(), Constant.STANDBY, Constant.ON));
 			case SERIAL_NUMBER -> mapToValue(deviceGeneral.getSerialNumber());
 		};
 	}
@@ -112,10 +112,10 @@ public final class MonitoringUtil {
 		}
 		return switch (generalSetting) {
 			case INPUT_SOURCE -> mapToValue(InputSource.getNameByCode(deviceGeneralSetting.getInputSource()));
-//			case PIP_MODE -> mapToValue(mapToStatus(deviceGeneralSetting.getPipMode(), Constant.OFF, Constant.ON));
-			case TILING_MODE -> mapToValue(mapToStatus(deviceGeneralSetting.getTilingMode(), Constant.OFF, Constant.ON));
-			case VOLUME -> mapToValue(Integer.parseInt(deviceGeneralSetting.getVolume()));
-			case VOLUME_MUTE -> mapToValue(mapToStatus(deviceGeneralSetting.getMute(), Constant.UNMUTE, Constant.MUTE));
+//			case PIP_MODE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getPipMode()));
+			case TILING_MODE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getTilingMode()));
+			case VOLUME, VOLUME_VALUE -> mapToValue(Integer.parseInt(deviceGeneralSetting.getVolume()));
+			case MUTE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getMute()));
 		};
 	}
 
@@ -133,14 +133,14 @@ public final class MonitoringUtil {
 			return null;
 		}
 		return switch (display) {
-			case BACKLIGHT_STATUS -> mapToValue(mapToStatus(deviceDisplay.getBacklightStatus(), Constant.OFF, Constant.ON));
-			case BACKLIGHT -> mapToValue(Integer.parseInt(deviceDisplay.getBacklight()));
-//			case BLUE_LIGHT_FILTER -> mapToValue(Integer.parseInt(deviceDisplay.getBluelightFilter()));
-			case BRIGHTNESS -> mapToValue(Integer.parseInt(deviceDisplay.getBrightness()));
-			case COLOR -> mapToValue(Integer.parseInt(deviceDisplay.getColor()));
-			case CONTRAST -> mapToValue(Integer.parseInt(deviceDisplay.getContrast()));
-//			case HUE -> mapToValue(Integer.parseInt(deviceDisplay.getTint()));
-//			case SHARPNESS -> mapToValue(Integer.parseInt(deviceDisplay.getSharpness()));
+			case BACKLIGHT_STATUS -> mapToValue(mapToDefaultStatus(deviceDisplay.getBacklightStatus()));
+			case BACKLIGHT, BACKLIGHT_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBacklight()));
+//			case BLUE_LIGHT_FILTER, BLUE_LIGHT_FILTER_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBluelightFilter()));
+			case BRIGHTNESS, BRIGHTNESS_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBrightness()));
+			case COLOR, COLOR_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getColor()));
+			case CONTRAST, CONTRAST_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getContrast()));
+//			case HUE, HUE_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getTint()));
+//			case SHARPNESS, SHARPNESS_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getSharpness()));
 		};
 	}
 
@@ -149,6 +149,10 @@ public final class MonitoringUtil {
 			return null;
 		}
 		return value.replaceAll(Constant.MAC_PAIR_REGEX, Constant.MAC_SEPARATOR_REPLACEMENT).toUpperCase();
+	}
+
+	private static String mapToDefaultStatus(String value) {
+		return mapToStatus(value, Constant.OFF, Constant.ON);
 	}
 
 	private static String mapToStatus(String value, String offValue, String onValue) {

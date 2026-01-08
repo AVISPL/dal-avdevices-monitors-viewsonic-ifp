@@ -10,8 +10,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.avispl.symphony.api.dal.dto.control.ControllableProperty;
 import com.avispl.symphony.api.dal.dto.monitor.ExtendedStatistics;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Display;
 
 /**
  * Unit tests for the {@link ViewSonicCommunicator} class.
@@ -47,6 +49,20 @@ class ViewSonicCommunicatorTest {
 		Map<String, String> statistics = this.extendedStatistics.getStatistics();
 
 		this.verifyStatistics(statistics);
+	}
+
+	@Test
+	void testControlProperties() throws Exception {
+		this.communicator.setDeviceId("01");
+		this.extendedStatistics = (ExtendedStatistics) this.communicator.getMultipleStatistics().get(0);
+		var testedProperty = Display.BACKLIGHT.getPropertyName();
+		var controllableProperty = new ControllableProperty(testedProperty, "20.0", null);
+
+		this.communicator.controlProperty(controllableProperty);
+		this.extendedStatistics = (ExtendedStatistics) this.communicator.getMultipleStatistics().get(0);
+		var statistics = this.extendedStatistics.getStatistics();
+
+		Assertions.assertEquals("20", statistics.get(testedProperty));
 	}
 
 	private void verifyStatistics(Map<String, String> statistics) {

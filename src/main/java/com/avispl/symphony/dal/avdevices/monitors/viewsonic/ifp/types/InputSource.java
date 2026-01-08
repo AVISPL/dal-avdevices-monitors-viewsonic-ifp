@@ -67,4 +67,20 @@ public enum InputSource {
 				.filter(source -> source.code.equalsIgnoreCase(code)).map(InputSource::getName)
 				.findFirst().orElse(null);
 	}
+
+	/**
+	 * Resolves the input source code by its name.
+	 *
+	 * @param name the input source name
+	 * @return the input source code, or {@code null} if not found or invalid
+	 */
+	public static String getCodeByName(Object name) {
+		var convertedName = String.valueOf(name);
+		if (StringUtils.isNullOrEmpty(convertedName)) {
+			return null;
+		}
+		return Arrays.stream(values())
+				.filter(source -> source.name.equalsIgnoreCase(convertedName)).map(InputSource::getCode)
+				.findFirst().orElse(null);
+	}
 }

@@ -83,37 +83,79 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 	}
 
 	/**
-	 * Sends a command to the device and retrieves the normalized response data.
-	 * <p>
-	 * This method builds a request command using the configured device ID and the provided command definition,
-	 * sends it to the device, and processes the response according to the protocol specification.
-	 * <p>
-	 * The response will be normalized by:
+	 * Sends a command to the device and returns the parsed response payload.
+	 *
+	 * @param <C> the command type, which must be an {@link Enum} implementing {@link BaseCommand}
+	 * @param command the command used to generate the request payload
+	 * @return the parsed response payload, or {@code null} if no response is received
+	 * @throws CommandFailureException if the response is invalid or does not match the command
+	 * @throws Exception if an error occurs while sending or receiving data
+	 */
+	protected <C extends Enum<C> & BaseCommand> String send(C command) throws Exception {
+		return this.sendAndParse(command, command.generateCommand());
+	}
+
+	/**
+	 * Sends a command with an associated value to the device.
+	 *
+	 * @param <C> the command type, which must be an {@link Enum} implementing {@link BaseCommand}
+	 * @param command the command used to generate the request payload
+	 * @param value the value associated with the command
+	 * @throws CommandFailureException if the response is invalid or does not match the command
+	 * @throws Exception if an error occurs while sending or receiving data
+	 */
+	protected <C extends Enum<C> & BaseCommand> void send(C command, String value) throws Exception {
+		this.sendAndParse(command, command.generateCommand(value));
+	}
+
+	/**
+	 * Sends a protocol-formatted request to the device and parses the response according to the protocol specification.
+	 *
+	 * <p>The response is processed by:
 	 * <ul>
 	 *   <li>Removing carriage return characters</li>
 	 *   <li>Trimming leading and trailing whitespace</li>
-	 *   <li>Stripping protocol-specific header fields (command length, device ID, command type, and command code)</li>
+	 *   <li>Validating the response header and command code</li>
+	 *   <li>Extracting the response payload when applicable</li>
 	 * </ul>
 	 *
 	 * @param <C> the command type, which must be an {@link Enum} implementing {@link BaseCommand}
-	 * @param command the command used to generate the request
-	 * @return the normalized response payload, or {@code null} if the response is invalid or indicates an error
-	 * @throws Exception if an error occurs while sending data
+	 * @param command the command associated with the request
+	 * @param request the command-specific request payload (without protocol header)
+	 * @return the parsed response payload for a successful command
+	 * @throws CommandFailureException if the response is invalid, does not match the command, or the device does not respond
+	 * @throws Exception if a transport-level error occurs while communicating with the device
 	 */
-	protected <C extends Enum<C> & BaseCommand> String send(C command) throws Exception {
-		var normalizedCommand = Constant.COMMAND_LENGTH + this.deviceId + command.generateCommand();
-		var response = super.send(normalizedCommand.getBytes(StandardCharsets.US_ASCII));
-		if (response.length == 1 && response[0] == -1) {
-			return null;
-		}
-		var normalizedResponse = new String(response, StandardCharsets.US_ASCII).replace(Constant.CR, Constant.EMPTY).trim();
-		var invalidResponse = normalizedResponse.charAt(3) == '-';
-		var isResponseMismatch = normalizedResponse.charAt(4) != command.getCode().charAt(0);
-		if (invalidResponse || isResponseMismatch) {
-			throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_REQUEST.value());
-		}
-		var expectedPrefix = Constant.COMMAND_LENGTH + this.deviceId + command.getType() + command.getCode();
+	private <C extends Enum<C> & BaseCommand> String sendAndParse(C command, String request) throws Exception {
+		try {
+			var normalizedCommand = Constant.COMMAND_LENGTH + this.deviceId + request;
+			var response = super.send(normalizedCommand.getBytes(StandardCharsets.US_ASCII));
+			if (response.length == 1 && response[0] == (byte) -1) {  //	handle no response
+				throw new CommandFailureException(this.getAddress(), normalizedCommand, null, HttpStatus.GATEWAY_TIMEOUT.value());
+			}
+			var normalizedResponse = new String(response, StandardCharsets.US_ASCII).replace(Constant.CR, Constant.EMPTY).trim();
+			if (normalizedResponse.length() < 4) {  //	handle undefine response
+				throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
+			}
+			switch (normalizedResponse.substring(0, 3)) {
+				case Constant.GET_RESPONSE_HEADER_1, Constant.GET_RESPONSE_HEADER_2 -> {  //	handle GET response
+					var expectedPrefix = Constant.COMMAND_LENGTH + this.deviceId + command.getType() + command.getCode();
+					if (normalizedResponse.charAt(4) != command.getCode().charAt(0) || !normalizedCommand.startsWith(expectedPrefix)) {
+						throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
+					}
 
-		return normalizedResponse.substring(expectedPrefix.length());
+					return normalizedResponse.substring(expectedPrefix.length());
+				}
+				case Constant.SET_RESPONSE_HEADER -> {  //	handle SET response
+					if (normalizedResponse.charAt(3) == Constant.NEGATIVE_ACK) {
+						throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_REQUEST.value());
+					}
+					return normalizedResponse;
+				}
+				default -> throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
+			}
+		} finally {
+			this.disconnect();
+		}
 	}
 }
