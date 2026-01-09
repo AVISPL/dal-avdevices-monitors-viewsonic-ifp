@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import com.avispl.symphony.api.dal.control.Controller;
 import com.avispl.symphony.api.dal.dto.control.AdvancedControllableProperty;
 import com.avispl.symphony.api.dal.dto.control.ControllableProperty;
@@ -23,6 +25,7 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.utils.Mon
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceDisplay;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneral;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneralSetting;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.InputSource;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.DisplayCommand;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.GeneralCommand;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.GeneralSettingCommand;
@@ -121,12 +124,48 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 
 	@Override
 	public void controlProperty(ControllableProperty controllableProperty) throws Exception {
-
+		this.reentrantLock.lock();
+		try {
+			var property = controllableProperty.getProperty();
+			//	General
+			if (General.POWER_STATUS.getName().equals(property)) {
+				this.send(GeneralCommand.SET_POWER_STATUS, ControlUtil.getStatusValue(controllableProperty.getValue()));
+			}
+			//	Display
+			else if (Display.BACKLIGHT_STATUS.getPropertyName().equals(property)) {
+				this.send(DisplayCommand.SET_BACKLIGHT_STATUS, ControlUtil.getStatusValue(controllableProperty.getValue()));
+			} else if (Display.BACKLIGHT.getPropertyName().equals(property)) {
+				this.send(DisplayCommand.SET_BACKLIGHT, ControlUtil.getRangeValue(controllableProperty.getValue()));
+			} else if (Display.BRIGHTNESS.getPropertyName().equals(property)) {
+				this.send(DisplayCommand.SET_BRIGHTNESS, ControlUtil.getRangeValue(controllableProperty.getValue()));
+			} else if (Display.COLOR.getPropertyName().equals(property)) {
+				this.send(DisplayCommand.SET_COLOR, ControlUtil.getRangeValue(controllableProperty.getValue()));
+			} else if (Display.CONTRAST.getPropertyName().equals(property)) {
+				this.send(DisplayCommand.SET_CONTRAST, ControlUtil.getRangeValue(controllableProperty.getValue()));
+			}
+			//	General settings
+			else if (GeneralSetting.INPUT_SOURCE.getPropertyName().equals(property)) {
+				this.send(GeneralSettingCommand.SET_INPUT_SOURCE, InputSource.getCodeByName(controllableProperty.getValue()));
+			} else if (GeneralSetting.TILING_MODE.getPropertyName().equals(property)) {
+				this.send(GeneralSettingCommand.SET_TILING_MODE, ControlUtil.getStatusValue(controllableProperty.getValue()));
+			} else if (GeneralSetting.VOLUME.getPropertyName().equals(property)) {
+				this.send(GeneralSettingCommand.SET_VOLUME, ControlUtil.getRangeValue(controllableProperty.getValue()));
+			} else if (GeneralSetting.MUTE.getPropertyName().equals(property)) {
+				this.send(GeneralSettingCommand.SET_MUTE, ControlUtil.getStatusValue(controllableProperty.getValue()));
+			}
+		} finally {
+			this.reentrantLock.unlock();
+		}
 	}
 
 	@Override
 	public void controlProperties(List<ControllableProperty> controllableProperties) throws Exception {
-
+		if (CollectionUtils.isEmpty(controllableProperties)) {
+			return;
+		}
+		for (ControllableProperty controllableProperty : controllableProperties) {
+			this.controlProperty(controllableProperty);
+		}
 	}
 
 	/**

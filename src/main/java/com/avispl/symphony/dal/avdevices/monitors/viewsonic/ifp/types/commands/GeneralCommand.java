@@ -24,6 +24,7 @@ public enum GeneralCommand implements BaseCommand {
 	GET_IP_ADDRESS(Constant.GET_COMMAND_TYPE, "6"),
 	GET_MAC_ADDRESS(Constant.GET_COMMAND_TYPE, "5"),
 	GET_POWER_STATUS(Constant.GET_COMMAND_TYPE, "l"),
+	SET_POWER_STATUS(Constant.SET_COMMAND_TYPE, "!"),
 	GET_SERIAL_NUMBER(Constant.GET_COMMAND_TYPE, "7");
 
 	String type;

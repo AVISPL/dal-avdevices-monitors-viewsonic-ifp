@@ -1,6 +1,11 @@
 /** Copyright (c) 2025 AVI-SPL, Inc. All Rights Reserved. */
 package com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.utils;
 
+import static com.avispl.symphony.dal.util.ControllablePropertyFactory.createDropdown;
+import static com.avispl.symphony.dal.util.ControllablePropertyFactory.createSlider;
+import static com.avispl.symphony.dal.util.ControllablePropertyFactory.createSwitch;
+
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -18,7 +23,6 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.InputSourc
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Display;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.General;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.GeneralSetting;
-import com.avispl.symphony.dal.util.ControllablePropertyFactory;
 
 /**
  * Utility class providing helper methods for controllable property.
@@ -39,7 +43,7 @@ public final class ControlUtil {
 			return Collections.emptyList();
 		}
 		return Collections.singletonList(
-				createSwitch(General.POWER_STATUS.getName(), Constant.OFF_STANDBY, Constant.ON, Integer.parseInt(deviceGeneral.getPowerStatus()))
+				createCustomSwitch(General.POWER_STATUS.getName(), Constant.STANDBY, Constant.ON, Integer.parseInt(deviceGeneral.getPowerStatus()))
 		);
 	}
 
@@ -54,11 +58,11 @@ public final class ControlUtil {
 			return Collections.emptyList();
 		}
 		return List.of(
-				ControllablePropertyFactory.createDropdown(GeneralSetting.INPUT_SOURCE.getPropertyName(), InputSource.getNames(), InputSource.getNameByCode(deviceGeneralSetting.getInputSource())),
-//				ControllablePropertyFactory.createSwitch(GeneralSetting.PIP_MODE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getPipMode())),
-				ControllablePropertyFactory.createSwitch(GeneralSetting.TILING_MODE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getTilingMode())),
-				ControllablePropertyFactory.createDropdown(GeneralSetting.VOLUME.getPropertyName(), Constant.RANGE_0_TO_100, String.valueOf(Integer.parseInt(deviceGeneralSetting.getVolume()))),
-				createSwitch(GeneralSetting.VOLUME_MUTE.getPropertyName(), Constant.UNMUTE, Constant.MUTE, Integer.parseInt(deviceGeneralSetting.getMute()))
+				createDropdown(GeneralSetting.INPUT_SOURCE.getPropertyName(), InputSource.getNames(), InputSource.getNameByCode(deviceGeneralSetting.getInputSource())),
+//				createSwitch(GeneralSetting.PIP_MODE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getPipMode())),
+				createSwitch(GeneralSetting.TILING_MODE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getTilingMode())),
+				createSlider(GeneralSetting.VOLUME.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceGeneralSetting.getVolume())),
+				createSwitch(GeneralSetting.MUTE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getMute()))
 		);
 	}
 
@@ -73,22 +77,47 @@ public final class ControlUtil {
 			return Collections.emptyList();
 		}
 		return List.of(
-				ControllablePropertyFactory.createSwitch(Display.BACKLIGHT_STATUS.getPropertyName(), Integer.parseInt(deviceDisplay.getBacklightStatus())),
-				ControllablePropertyFactory.createDropdown(Display.BACKLIGHT.getPropertyName(), Constant.RANGE_0_TO_100, String.valueOf(Integer.parseInt(deviceDisplay.getBacklight()))),
-//				ControllablePropertyFactory.createDropdown(Display.BLUE_LIGHT_FILTER.getPropertyName(), Constant.RANGE_0_TO_100, String.valueOf(Integer.parseInt(deviceDisplay.getBluelightFilter()))),
-				ControllablePropertyFactory.createDropdown(Display.BRIGHTNESS.getPropertyName(), Constant.RANGE_0_TO_100, String.valueOf(Integer.parseInt(deviceDisplay.getBrightness()))),
-				ControllablePropertyFactory.createDropdown(Display.COLOR.getPropertyName(), Constant.RANGE_0_TO_100, String.valueOf(Integer.parseInt(deviceDisplay.getColor()))),
-				ControllablePropertyFactory.createDropdown(Display.CONTRAST.getPropertyName(), Constant.RANGE_0_TO_100, String.valueOf(Integer.parseInt(deviceDisplay.getContrast())))
-//				ControllablePropertyFactory.createDropdown(Display.HUE.getPropertyName(), Constant.RANGE_0_TO_100, String.valueOf(Integer.parseInt(deviceDisplay.getTint()))),
-//				ControllablePropertyFactory.createDropdown(Display.SHARPNESS.getPropertyName(), Constant.RANGE_0_TO_100, String.valueOf(Integer.parseInt(deviceDisplay.getSharpness())))
+				createSwitch(Display.BACKLIGHT_STATUS.getPropertyName(), Integer.parseInt(deviceDisplay.getBacklightStatus())),
+				createSlider(Display.BACKLIGHT.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getBacklight())),
+//				createSlider(Display.BLUE_LIGHT_FILTER.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getBluelightFilter())),
+				createSlider(Display.BRIGHTNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getBrightness())),
+				createSlider(Display.COLOR.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getColor())),
+				createSlider(Display.CONTRAST.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getContrast()))
+//				createSlider(Display.HUE.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getTint())),
+//				createSlider(Display.SHARPNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getSharpness()))
 		);
 	}
 
-	private static AdvancedControllableProperty createSwitch(String name, String labelOff, String labelOn, Object value) {
-		var sw = new Switch();
-		sw.setLabelOff(labelOff);
-		sw.setLabelOn(labelOn);
+	/**
+	 * Resolves the property status value from the given input.
+	 *
+	 * @param value the raw status value
+	 * @return the formatted status value, or {@code null} if the value is unsupported
+	 */
+	public static String getStatusValue(Object value) {
+		return switch (String.valueOf(value)) {
+			case "0" -> "000";
+			case "1" -> "001";
+			default -> null;
+		};
+	}
 
-		return new AdvancedControllableProperty(name, new Date(), sw, value);
+	/**
+	 * Formats the given numeric value into a three-digit property range value.
+	 *
+	 * @param value the raw numeric value
+	 * @return the value formatted as a three-digit string
+	 * @throws NumberFormatException if the value is not a valid number
+	 */
+	public static String getRangeValue(Object value) {
+		return String.format(Constant.THREE_DIGIT_NUMBER_FORMAT, new BigDecimal(String.valueOf(value)).intValue());
+	}
+
+	private static AdvancedControllableProperty createCustomSwitch(String name, String offLabel, String onLabel, int status) {
+		var sw = new Switch();
+		sw.setLabelOff(offLabel);
+		sw.setLabelOn(onLabel);
+
+		return new AdvancedControllableProperty(name, new Date(), sw, status);
 	}
 }

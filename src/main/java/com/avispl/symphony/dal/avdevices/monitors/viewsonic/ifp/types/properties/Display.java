@@ -21,13 +21,20 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants
 public enum Display implements BaseProperty {
 	BACKLIGHT_STATUS("BacklightStatus"),
 	BACKLIGHT("Backlight(%)"),
+	BACKLIGHT_VALUE("BacklightCurrentValue(%)"),
 	//	BLUE_LIGHT_FILTER("BlueLightFilter(%)"),
+	//	BLUE_LIGHT_FILTER_VALUE("BlueLightFilterCurrentValue(%)"),
 	BRIGHTNESS("Brightness(%)"),
+	BRIGHTNESS_VALUE("BrightnessCurrentValue(%)"),
 	COLOR("Color(%)"),
+	COLOR_VALUE("ColorCurrentValue(%)"),
 	//	COLOR_MODE("ColorMode"),
 	CONTRAST("Contrast(%)"),
+	CONTRAST_VALUE("ContrastCurrentValue(%)"),
 	//	HUE("Hue(%)"),
+	//	HUE_VALUE("HueCurrentValue(%)"),
 	//	SHARPNESS("Sharpness(%)")
+	//	SHARPNESS_VALUE("SharpnessCurrentValue(%)")
 	;
 
 	String name;
