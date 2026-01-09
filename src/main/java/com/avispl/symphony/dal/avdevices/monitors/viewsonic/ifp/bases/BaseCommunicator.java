@@ -137,11 +137,11 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 			var normalizedCommand = Constant.COMMAND_LENGTH + this.deviceId + request;
 			var response = super.send(normalizedCommand.getBytes(StandardCharsets.US_ASCII));
 			if (response.length == 1 && response[0] == (byte) -1) {  //	handle no response
-				throw new CommandFailureException(this.getAddress(), normalizedCommand, null, HttpStatus.GATEWAY_TIMEOUT.value());
+				throw new CommandFailureException(this.getAddress(), normalizedCommand, null, HttpStatus.NOT_FOUND.value());
 			}
 			var normalizedResponse = new String(response, StandardCharsets.US_ASCII).replace(Constant.CR, Constant.EMPTY).trim();
 			if (normalizedResponse.length() < 4) {  //	handle undefine response
-				throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
+				throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.INTERNAL_SERVER_ERROR.value());
 			}
 			switch (normalizedResponse.substring(0, 3)) {
 				case Constant.GET_RESPONSE_HEADER_1, Constant.GET_RESPONSE_HEADER_2 -> {  //	handle GET response
@@ -157,7 +157,7 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 					}
 					return normalizedResponse;
 				}
-				default -> throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
+				default -> throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.NOT_FOUND.value());
 			}
 		} catch (FailedLoginException e) {
 			throw e;
