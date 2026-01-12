@@ -23,7 +23,8 @@ public enum GeneralSetting implements BaseProperty {
 	//	PIP_MODE("PIPMode"),
 	TILING_MODE("TilingMode"),
 	VOLUME("Volume(%)"),
-	VOLUME_MUTE("VolumeMute");
+	VOLUME_VALUE("VolumeCurrentValue(%)"),
+	MUTE("Mute");
 
 	String name;
 

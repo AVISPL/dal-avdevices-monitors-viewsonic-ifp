@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.bases.BaseProperty;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.Logger;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceDisplay;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneral;
@@ -33,6 +34,8 @@ import com.avispl.symphony.dal.util.StringUtils;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class MonitoringUtil {
+	private static final Logger LOG = Logger.ofClass(MonitoringUtil.class);
+
 	/**
 	 * Generates a map of property names and their corresponding values.
 	 * <p>
@@ -65,6 +68,7 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToAdapterMetadata(Properties versionProperties, AdapterMetadata adapterMetadata) {
 		if (versionProperties == null) {
+			LOG.warn("The versionProperties is null, returning empty property");
 			return null;
 		}
 		return switch (adapterMetadata) {
@@ -85,6 +89,7 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToGeneral(DeviceGeneral deviceGeneral, General general) {
 		if (deviceGeneral == null) {
+			LOG.warn("The deviceGeneral is null, returning empty property");
 			return null;
 		}
 		return switch (general) {
@@ -92,7 +97,7 @@ public final class MonitoringUtil {
 			case FIRMWARE_VERSION -> mapToValue(deviceGeneral.getFirmwareVersion());
 			case IP_ADDRESS -> mapToValue(deviceGeneral.getIpAddress());
 			case MAC_ADDRESS -> mapToValue(mapToMacAddress(deviceGeneral.getMacAddress()));
-			case POWER_STATUS -> mapToValue(mapToStatus(deviceGeneral.getPowerStatus(), Constant.OFF_STANDBY, Constant.ON));
+			case POWER_STATUS -> mapToValue(mapToStatus(deviceGeneral.getPowerStatus(), Constant.STANDBY, Constant.ON));
 			case SERIAL_NUMBER -> mapToValue(deviceGeneral.getSerialNumber());
 		};
 	}
@@ -108,14 +113,15 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToGeneralSettings(DeviceGeneralSetting deviceGeneralSetting, GeneralSetting generalSetting) {
 		if (deviceGeneralSetting == null) {
+			LOG.warn("The deviceGeneralSetting is null, returning empty property");
 			return null;
 		}
 		return switch (generalSetting) {
 			case INPUT_SOURCE -> mapToValue(InputSource.getNameByCode(deviceGeneralSetting.getInputSource()));
-//			case PIP_MODE -> mapToValue(mapToStatus(deviceGeneralSetting.getPipMode(), Constant.OFF, Constant.ON));
-			case TILING_MODE -> mapToValue(mapToStatus(deviceGeneralSetting.getTilingMode(), Constant.OFF, Constant.ON));
-			case VOLUME -> mapToValue(Integer.parseInt(deviceGeneralSetting.getVolume()));
-			case VOLUME_MUTE -> mapToValue(mapToStatus(deviceGeneralSetting.getMute(), Constant.UNMUTE, Constant.MUTE));
+//			case PIP_MODE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getPipMode()));
+			case TILING_MODE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getTilingMode()));
+			case VOLUME, VOLUME_VALUE -> mapToValue(Integer.parseInt(deviceGeneralSetting.getVolume()));
+			case MUTE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getMute()));
 		};
 	}
 
@@ -130,25 +136,31 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToDisplay(DeviceDisplay deviceDisplay, Display display) {
 		if (deviceDisplay == null) {
+			LOG.warn("The deviceDisplay is null, returning empty property");
 			return null;
 		}
 		return switch (display) {
-			case BACKLIGHT_STATUS -> mapToValue(mapToStatus(deviceDisplay.getBacklightStatus(), Constant.OFF, Constant.ON));
-			case BACKLIGHT -> mapToValue(Integer.parseInt(deviceDisplay.getBacklight()));
-//			case BLUE_LIGHT_FILTER -> mapToValue(Integer.parseInt(deviceDisplay.getBluelightFilter()));
-			case BRIGHTNESS -> mapToValue(Integer.parseInt(deviceDisplay.getBrightness()));
-			case COLOR -> mapToValue(Integer.parseInt(deviceDisplay.getColor()));
-			case CONTRAST -> mapToValue(Integer.parseInt(deviceDisplay.getContrast()));
-//			case HUE -> mapToValue(Integer.parseInt(deviceDisplay.getTint()));
-//			case SHARPNESS -> mapToValue(Integer.parseInt(deviceDisplay.getSharpness()));
+			case BACKLIGHT_STATUS -> mapToValue(mapToDefaultStatus(deviceDisplay.getBacklightStatus()));
+			case BACKLIGHT, BACKLIGHT_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBacklight()));
+//			case BLUE_LIGHT_FILTER, BLUE_LIGHT_FILTER_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBluelightFilter()));
+			case BRIGHTNESS, BRIGHTNESS_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBrightness()));
+			case COLOR, COLOR_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getColor()));
+			case CONTRAST, CONTRAST_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getContrast()));
+//			case HUE, HUE_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getTint()));
+//			case SHARPNESS, SHARPNESS_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getSharpness()));
 		};
 	}
 
 	private static String mapToMacAddress(String value) {
 		if (StringUtils.isNullOrEmpty(value) || value.length() != 12) {
+			LOG.warn(Constant.INVALID_VALUE_WARNING.formatted(value));
 			return null;
 		}
 		return value.replaceAll(Constant.MAC_PAIR_REGEX, Constant.MAC_SEPARATOR_REPLACEMENT).toUpperCase();
+	}
+
+	private static String mapToDefaultStatus(String value) {
+		return mapToStatus(value, Constant.OFF, Constant.ON);
 	}
 
 	private static String mapToStatus(String value, String offValue, String onValue) {
@@ -194,6 +206,7 @@ public final class MonitoringUtil {
 	 */
 	private static String mapToValue(Object value, boolean isTitleCase) {
 		if (value == null) {
+			LOG.warn("The value is null, returning null");
 			return null;
 		}
 		if (value instanceof String str) {
@@ -225,6 +238,7 @@ public final class MonitoringUtil {
 	 */
 	private static String toTitleCase(String value) {
 		if (StringUtils.isNullOrEmpty(value) || value.equals("null")) {
+			LOG.warn(Constant.INVALID_VALUE_WARNING.formatted(value));
 			return null;
 		}
 		if (Util.isBooleanValue(value)) {
@@ -247,6 +261,7 @@ public final class MonitoringUtil {
 	private static String mapToUptime(String uptime) {
 		try {
 			if (StringUtils.isNullOrEmpty(uptime)) {
+				LOG.warn("The value is null or empty, returning null");
 				return null;
 			}
 
@@ -269,6 +284,7 @@ public final class MonitoringUtil {
 
 			return rs.toString().trim();
 		} catch (Exception e) {
+			LOG.error("Failed to mapToUptime with uptime: " + uptime, e);
 			return null;
 		}
 	}
@@ -285,6 +301,7 @@ public final class MonitoringUtil {
 	private static String mapToUptimeMin(String uptime) {
 		try {
 			if (StringUtils.isNullOrEmpty(uptime)) {
+				LOG.warn("The value is null or empty, returning null");
 				return null;
 			}
 
@@ -293,6 +310,7 @@ public final class MonitoringUtil {
 
 			return String.valueOf(minutes);
 		} catch (Exception e) {
+			LOG.error("Failed to mapToUptimeMin with uptime: " + uptime, e);
 			return null;
 		}
 	}

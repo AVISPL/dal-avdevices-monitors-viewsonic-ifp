@@ -63,8 +63,27 @@ public enum InputSource {
 		if (StringUtils.isNullOrEmpty(code)) {
 			return null;
 		}
-		return Arrays.stream(values())
+		return "10A".equals(code) ? EMBEDDED_ANDROID.name : Arrays.stream(values())
 				.filter(source -> source.code.equalsIgnoreCase(code)).map(InputSource::getName)
+				.findFirst().orElse(null);
+	}
+
+	/**
+	 * Resolves the input source code by its name.
+	 *
+	 * @param name the input source name
+	 * @return the input source code, or {@code null} if not found or invalid
+	 */
+	public static String getCodeByName(Object name) {
+		if (name == null) {
+			return null;
+		}
+		var convertedName = name.toString().trim();
+		if (convertedName.isEmpty()) {
+			return null;
+		}
+		return Arrays.stream(values())
+				.filter(source -> source.name.equalsIgnoreCase(convertedName)).map(InputSource::getCode)
 				.findFirst().orElse(null);
 	}
 }
