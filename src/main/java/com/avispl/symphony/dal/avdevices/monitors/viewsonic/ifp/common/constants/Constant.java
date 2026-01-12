@@ -24,6 +24,8 @@ public final class Constant {
 	public static final String CR = "\r";
 	public static final String EMPTY = "";
 	public static final String HASH = "#";
+	public static final String COMMA = ",";
+	public static final String COMMA_SPACE = ", ";
 
 	//	Values
 	public static final String NOT_AVAILABLE = "N/A";
@@ -39,9 +41,10 @@ public final class Constant {
 	public static final String ON = "On";
 	public static final float PERCENTAGE_MIN = 0f;
 	public static final float PERCENTAGE_MAX = 100f;
+	public static final String ALL = "All";
 
 	//	Groups
-	public static final String GENERAL = "General";
+	public static final String GENERAL_GROUP = "General";
 	public static final String ADAPTER_METADATA_GROUP = "AdapterMetadata";
 	public static final String GENERAL_SETTING_GROUP = "GeneralSettings";
 	public static final String DISPLAY_GROUP = "Display";
@@ -49,6 +52,7 @@ public final class Constant {
 	//	Warning messages
 	public static final String CONTROLLABLE_PROPS_EMPTY_WARNING = "ControllableProperties list is null or empty, skipping control operation";
 	public static final String INVALID_VALUE_WARNING = "The value is invalid(%s), returning null.";
+	public static final String NO_VALID_DISPLAY_PROPERTY_GROUPS_WARNING = "No valid display property groups found from input: '%s'";
 
 	//	Fail messages
 	public static final String READ_PROPERTIES_FILE_FAILED = "Failed to load version properties file.";

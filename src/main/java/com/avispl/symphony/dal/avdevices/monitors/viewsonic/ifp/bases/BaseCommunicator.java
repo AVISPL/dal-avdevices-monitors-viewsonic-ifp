@@ -2,13 +2,18 @@
 package com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.bases;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 
 import javax.security.auth.login.FailedLoginException;
 import lombok.Getter;
+import org.apache.commons.collections.CollectionUtils;
 
 import com.avispl.symphony.api.common.error.InvalidArgumentException;
 import com.avispl.symphony.api.dal.error.CommandFailureException;
@@ -26,6 +31,11 @@ import com.avispl.symphony.dal.util.StringUtils;
  * @since 1.0.0
  */
 public abstract class BaseCommunicator extends SocketCommunicator {
+	/** Set of supported group filter for {@link #displayPropertyGroups}. */
+	private static final Set<String> SUPPORTED_GROUP_FILTERS = new TreeSet<>(Set.of(
+			Constant.GENERAL_GROUP, Constant.DISPLAY_GROUP, Constant.GENERAL_SETTING_GROUP
+	));
+
 	/** Lock for thread-safe operations. */
 	protected final ReentrantLock reentrantLock;
 	/** Logger used for recording diagnostic and runtime information. */
@@ -34,10 +44,13 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 	/** Adapter property representing the device ID, used when sending commands to the device. */
 	@Getter
 	private String deviceId;
+	/** Indicates whether groups are displayed; defaults to {@link Constant#GENERAL_GROUP}. */
+	private final Set<String> displayPropertyGroups;
 
 	protected BaseCommunicator() {
 		this.reentrantLock = new ReentrantLock();
 		this.log = new Logger(super.logger);
+		this.displayPropertyGroups = new TreeSet<>(Set.of(Constant.GENERAL_GROUP));
 	}
 
 	@Override
@@ -45,6 +58,12 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 		this.setCommandSuccessList(Collections.singletonList(Constant.CR));
 		this.setCommandErrorList(Collections.singletonList(Constant.CR));
 		super.internalInit();
+	}
+
+	@Override
+	protected void internalDestroy() {
+		this.displayPropertyGroups.clear();
+		super.internalDestroy();
 	}
 
 	/**
@@ -72,6 +91,52 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 			return;
 		}
 		this.deviceId = String.format(Constant.TWO_DIGIT_NUMBER_FORMAT, parsedDeviceId);
+	}
+
+	/**
+	 * Returns a comma-separated list of property group names that are configured to be displayed.
+	 *
+	 * @return a comma-separated string of display property group names; may be empty if no groups are configured
+	 */
+	public String getDisplayPropertyGroups() {
+		return String.join(Constant.COMMA_SPACE, this.displayPropertyGroups);
+	}
+
+	/**
+	 * Sets the display property groups based on a comma-separated list.
+	 * <p>
+	 * Trims values automatically. If {@link Constant#ALL} is present, {@link #SUPPORTED_GROUP_FILTERS} are added.
+	 * Invalid groups trigger a warning and only the default group applied. {@code null} or empty input is ignored.
+	 * </p>
+	 *
+	 * @param displayPropertyGroups comma-separated group names; may be {@code null} or empty
+	 */
+	public void setDisplayPropertyGroups(String displayPropertyGroups) {
+		if (StringUtils.isNullOrEmpty(displayPropertyGroups, true)) {
+			return;
+		}
+		Set<String> checkedGroups = Arrays.stream(displayPropertyGroups.split(Constant.COMMA))
+				.map(String::trim).filter(p -> !p.isEmpty()).collect(Collectors.toSet());
+		if (checkedGroups.contains(Constant.ALL)) {
+			this.displayPropertyGroups.addAll(SUPPORTED_GROUP_FILTERS);
+			return;
+		}
+		if (!CollectionUtils.containsAny(SUPPORTED_GROUP_FILTERS, checkedGroups)) {
+			this.log.warn(Constant.NO_VALID_DISPLAY_PROPERTY_GROUPS_WARNING.formatted(displayPropertyGroups));
+		} else {
+			this.displayPropertyGroups.clear();
+			checkedGroups.stream().filter(SUPPORTED_GROUP_FILTERS::contains).forEach(this.displayPropertyGroups::add);
+		}
+	}
+
+	/**
+	 * Checks whether the specified property group is configured to be displayed.
+	 *
+	 * @param groupName the name of the property group to check
+	 * @return {@code true} if the group is configured to be displayed; {@code false} otherwise
+	 */
+	protected boolean shouldShowGroup(String groupName) {
+		return CollectionUtils.isNotEmpty(this.displayPropertyGroups) && this.displayPropertyGroups.contains(groupName);
 	}
 
 	/**

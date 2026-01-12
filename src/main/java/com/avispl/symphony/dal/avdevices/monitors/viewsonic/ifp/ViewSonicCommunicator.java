@@ -92,27 +92,29 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 			this.validateAdapterProperties();
 			this.setupData();
 			var statistics = new HashMap<String, String>();
-			statistics.putAll(MonitoringUtil.generateProperties(
-					General.values(), null,
-					property -> MonitoringUtil.mapToGeneral(this.deviceGeneral, property)
-			));
+			var controllableProperties = new ArrayList<AdvancedControllableProperty>();
+			if (this.shouldShowGroup(Constant.GENERAL_GROUP)) {
+				statistics.putAll(MonitoringUtil.generateProperties(
+						General.values(), null, property -> MonitoringUtil.mapToGeneral(this.deviceGeneral, property)
+				));
+				controllableProperties.addAll(ControlUtil.getGeneralControllers(this.deviceGeneral));
+			}
 			statistics.putAll(MonitoringUtil.generateProperties(
 					AdapterMetadata.values(), Constant.ADAPTER_METADATA_GROUP,
 					property -> MonitoringUtil.mapToAdapterMetadata(this.versionProperties, property)
 			));
-			statistics.putAll(MonitoringUtil.generateProperties(
-					Display.values(), Constant.DISPLAY_GROUP,
-					property -> MonitoringUtil.mapToDisplay(this.deviceDisplay, property)
-			));
-			statistics.putAll(MonitoringUtil.generateProperties(
-					GeneralSetting.values(), Constant.GENERAL_SETTING_GROUP,
-					property -> MonitoringUtil.mapToGeneralSettings(this.deviceGeneralSetting, property)
-			));
-
-			var controllableProperties = new ArrayList<AdvancedControllableProperty>();
-			controllableProperties.addAll(ControlUtil.getGeneralControllers(this.deviceGeneral));
-			controllableProperties.addAll(ControlUtil.getDisplayControllers(this.deviceDisplay));
-			controllableProperties.addAll(ControlUtil.getGeneralSettingsControllers(this.deviceGeneralSetting));
+			if (this.shouldShowGroup(Constant.DISPLAY_GROUP)) {
+				statistics.putAll(MonitoringUtil.generateProperties(
+						Display.values(), Constant.DISPLAY_GROUP, property -> MonitoringUtil.mapToDisplay(this.deviceDisplay, property)
+				));
+				controllableProperties.addAll(ControlUtil.getDisplayControllers(this.deviceDisplay));
+			}
+			if (this.shouldShowGroup(Constant.GENERAL_SETTING_GROUP)) {
+				statistics.putAll(MonitoringUtil.generateProperties(
+						GeneralSetting.values(), Constant.GENERAL_SETTING_GROUP, property -> MonitoringUtil.mapToGeneralSettings(this.deviceGeneralSetting, property)
+				));
+				controllableProperties.addAll(ControlUtil.getGeneralSettingsControllers(this.deviceGeneralSetting));
+			}
 
 			this.localExtendedStatistics.setStatistics(statistics);
 			this.localExtendedStatistics.setControllableProperties(controllableProperties);
@@ -177,7 +179,7 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 	private void loadVersionProperties(Properties versionProperties) {
 		try {
 			versionProperties.load(this.getClass().getResourceAsStream("/version.properties"));
-			versionProperties.setProperty(AdapterMetadata.ACTIVE_PROPERTY_GROUPS.getProperty(), Constant.NOT_AVAILABLE);
+			versionProperties.setProperty(AdapterMetadata.ACTIVE_PROPERTY_GROUPS.getProperty(), this.getDisplayPropertyGroups());
 			versionProperties.setProperty(AdapterMetadata.ADAPTER_UPTIME.getProperty(), String.valueOf(this.adapterInitializationTimestamp));
 		} catch (IOException e) {
 			this.log.error(Constant.READ_PROPERTIES_FILE_FAILED, e);
@@ -190,27 +192,31 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 	 * @throws Exception if authentication or data retrieval fails
 	 */
 	private void setupData() throws Exception {
-		this.deviceGeneral.setDeviceName(this.send(GeneralCommand.GET_DEVICE_NAME));
-		this.deviceGeneral.setFirmwareVersion(this.send(GeneralCommand.GET_FIRMWARE_VERSION));
-		this.deviceGeneral.setIpAddress(this.send(GeneralCommand.GET_IP_ADDRESS));
-		this.deviceGeneral.setMacAddress(this.send(GeneralCommand.GET_MAC_ADDRESS));
-		this.deviceGeneral.setPowerStatus(this.send(GeneralCommand.GET_POWER_STATUS));
-		this.deviceGeneral.setSerialNumber(this.send(GeneralCommand.GET_SERIAL_NUMBER));
-
-		this.deviceGeneralSetting.setInputSource(this.send(GeneralSettingCommand.GET_INPUT_SOURCE));
+		if (this.shouldShowGroup(Constant.GENERAL_GROUP)) {
+			this.deviceGeneral.setDeviceName(this.send(GeneralCommand.GET_DEVICE_NAME));
+			this.deviceGeneral.setFirmwareVersion(this.send(GeneralCommand.GET_FIRMWARE_VERSION));
+			this.deviceGeneral.setIpAddress(this.send(GeneralCommand.GET_IP_ADDRESS));
+			this.deviceGeneral.setMacAddress(this.send(GeneralCommand.GET_MAC_ADDRESS));
+			this.deviceGeneral.setPowerStatus(this.send(GeneralCommand.GET_POWER_STATUS));
+			this.deviceGeneral.setSerialNumber(this.send(GeneralCommand.GET_SERIAL_NUMBER));
+		}
+		if (this.shouldShowGroup(Constant.GENERAL_SETTING_GROUP)) {
+			this.deviceGeneralSetting.setInputSource(this.send(GeneralSettingCommand.GET_INPUT_SOURCE));
 //		this.deviceGeneralSetting.setPipMode(this.send(GeneralSettingCommand.GET_PIP_MODE));
-		this.deviceGeneralSetting.setTilingMode(this.send(GeneralSettingCommand.GET_TILING_MODE));
-		this.deviceGeneralSetting.setVolume(this.send(GeneralSettingCommand.GET_VOLUME));
-		this.deviceGeneralSetting.setMute(this.send(GeneralSettingCommand.GET_MUTE));
-
-		this.deviceDisplay.setBacklightStatus(this.send(DisplayCommand.GET_BACKLIGHT_STATUS));
-		this.deviceDisplay.setBacklight(this.send(DisplayCommand.GET_BACKLIGHT));
+			this.deviceGeneralSetting.setTilingMode(this.send(GeneralSettingCommand.GET_TILING_MODE));
+			this.deviceGeneralSetting.setVolume(this.send(GeneralSettingCommand.GET_VOLUME));
+			this.deviceGeneralSetting.setMute(this.send(GeneralSettingCommand.GET_MUTE));
+		}
+		if (this.shouldShowGroup(Constant.DISPLAY_GROUP)) {
+			this.deviceDisplay.setBacklightStatus(this.send(DisplayCommand.GET_BACKLIGHT_STATUS));
+			this.deviceDisplay.setBacklight(this.send(DisplayCommand.GET_BACKLIGHT));
 //		this.deviceDisplay.setBluelightFilter(this.send(DisplayCommand.GET_BLUE_LIGHT_FILTER));
-		this.deviceDisplay.setBrightness(this.send(DisplayCommand.GET_BRIGHTNESS));
-		this.deviceDisplay.setColor(this.send(DisplayCommand.GET_COLOR));
+			this.deviceDisplay.setBrightness(this.send(DisplayCommand.GET_BRIGHTNESS));
+			this.deviceDisplay.setColor(this.send(DisplayCommand.GET_COLOR));
 //		this.deviceDisplay.setColorMode(this.send(DisplayCommand.GET_COLOR_MODE));
-		this.deviceDisplay.setContrast(this.send(DisplayCommand.GET_CONTRAST));
+			this.deviceDisplay.setContrast(this.send(DisplayCommand.GET_CONTRAST));
 //		this.deviceDisplay.setTint(this.send(DisplayCommand.GET_TINT));
 //		this.deviceDisplay.setSharpness(this.send(DisplayCommand.GET_SHARPNESS));
+		}
 	}
 }
