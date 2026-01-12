@@ -45,10 +45,21 @@ class ViewSonicCommunicatorTest {
 	@Test
 	void testGetMultipleStatistics() throws Exception {
 		this.communicator.setDeviceId("01");
+		this.communicator.setDisplayPropertyGroups(Constant.GENERAL_SETTING_GROUP);
 		this.extendedStatistics = (ExtendedStatistics) this.communicator.getMultipleStatistics().get(0);
 		Map<String, String> statistics = this.extendedStatistics.getStatistics();
 
 		this.verifyStatistics(statistics);
+	}
+
+	@Test
+	void testGetMultipleStatisticsWithDisplayPropertyGroups() throws Exception {
+		this.communicator.setDeviceId("01");
+		this.extendedStatistics = (ExtendedStatistics) this.communicator.getMultipleStatistics().get(0);
+		Map<String, String> statistics = this.extendedStatistics.getStatistics();
+		Assertions.assertEquals(Constant.GENERAL_GROUP, this.communicator.getDisplayPropertyGroups());
+		Assertions.assertTrue(statistics.keySet().stream()
+				.noneMatch(k -> k.startsWith(Constant.DISPLAY_GROUP) && k.startsWith(Constant.GENERAL_SETTING_GROUP)));
 	}
 
 	@Test
@@ -67,7 +78,7 @@ class ViewSonicCommunicatorTest {
 
 	private void verifyStatistics(Map<String, String> statistics) {
 		Map<String, Map<String, String>> groups = new LinkedHashMap<>();
-		groups.put(Constant.GENERAL, this.filterGroupStatistics(statistics, null));
+		groups.put(Constant.GENERAL_GROUP, this.filterGroupStatistics(statistics, null));
 		groups.put(Constant.ADAPTER_METADATA_GROUP, this.filterGroupStatistics(statistics, Constant.ADAPTER_METADATA_GROUP));
 		groups.put(Constant.DISPLAY_GROUP, this.filterGroupStatistics(statistics, Constant.DISPLAY_GROUP));
 		groups.put(Constant.GENERAL_SETTING_GROUP, this.filterGroupStatistics(statistics, Constant.GENERAL_SETTING_GROUP));
