@@ -46,7 +46,13 @@ public final class Constant {
 	public static final String GENERAL_SETTING_GROUP = "GeneralSettings";
 	public static final String DISPLAY_GROUP = "Display";
 
+	//	Warning messages
+	public static final String CONTROLLABLE_PROPS_EMPTY_WARNING = "ControllableProperties list is null or empty, skipping control operation";
+	public static final String INVALID_VALUE_WARNING = "The value is invalid(%s), returning null.";
+
 	//	Fail messages
 	public static final String READ_PROPERTIES_FILE_FAILED = "Failed to load version properties file.";
 	public static final String SET_DEVICE_ID_FAILED = "Invalid deviceId property. Please provide a value from 01 to 98.";
+	public static final String FETCH_DATA_FAILED = "Device monitoring cannot proceed, the required data could not be fetched from the %s command.";
+	public static final String CONTROL_PROPERTY_FAILED = "Unable to perform this action at the moment. Please try again later.";
 }

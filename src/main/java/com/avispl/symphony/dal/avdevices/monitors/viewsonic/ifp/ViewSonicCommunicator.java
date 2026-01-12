@@ -161,6 +161,7 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 	@Override
 	public void controlProperties(List<ControllableProperty> controllableProperties) throws Exception {
 		if (CollectionUtils.isEmpty(controllableProperties)) {
+			this.log.warn(Constant.CONTROLLABLE_PROPS_EMPTY_WARNING);
 			return;
 		}
 		for (ControllableProperty controllableProperty : controllableProperties) {
@@ -179,7 +180,7 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 			versionProperties.setProperty(AdapterMetadata.ACTIVE_PROPERTY_GROUPS.getProperty(), Constant.NOT_AVAILABLE);
 			versionProperties.setProperty(AdapterMetadata.ADAPTER_UPTIME.getProperty(), String.valueOf(this.adapterInitializationTimestamp));
 		} catch (IOException e) {
-			this.logger.error(Constant.READ_PROPERTIES_FILE_FAILED, e);
+			this.log.error(Constant.READ_PROPERTIES_FILE_FAILED, e);
 		}
 	}
 

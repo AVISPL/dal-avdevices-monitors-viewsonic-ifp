@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.bases.BaseProperty;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.Logger;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceDisplay;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneral;
@@ -33,6 +34,8 @@ import com.avispl.symphony.dal.util.StringUtils;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class MonitoringUtil {
+	private static final Logger LOG = Logger.ofClass(MonitoringUtil.class);
+
 	/**
 	 * Generates a map of property names and their corresponding values.
 	 * <p>
@@ -65,6 +68,7 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToAdapterMetadata(Properties versionProperties, AdapterMetadata adapterMetadata) {
 		if (versionProperties == null) {
+			LOG.warn("The versionProperties is null, returning empty property");
 			return null;
 		}
 		return switch (adapterMetadata) {
@@ -85,6 +89,7 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToGeneral(DeviceGeneral deviceGeneral, General general) {
 		if (deviceGeneral == null) {
+			LOG.warn("The deviceGeneral is null, returning empty property");
 			return null;
 		}
 		return switch (general) {
@@ -108,6 +113,7 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToGeneralSettings(DeviceGeneralSetting deviceGeneralSetting, GeneralSetting generalSetting) {
 		if (deviceGeneralSetting == null) {
+			LOG.warn("The deviceGeneralSetting is null, returning empty property");
 			return null;
 		}
 		return switch (generalSetting) {
@@ -130,6 +136,7 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToDisplay(DeviceDisplay deviceDisplay, Display display) {
 		if (deviceDisplay == null) {
+			LOG.warn("The deviceDisplay is null, returning empty property");
 			return null;
 		}
 		return switch (display) {
@@ -146,6 +153,7 @@ public final class MonitoringUtil {
 
 	private static String mapToMacAddress(String value) {
 		if (StringUtils.isNullOrEmpty(value) || value.length() != 12) {
+			LOG.warn(Constant.INVALID_VALUE_WARNING.formatted(value));
 			return null;
 		}
 		return value.replaceAll(Constant.MAC_PAIR_REGEX, Constant.MAC_SEPARATOR_REPLACEMENT).toUpperCase();
@@ -198,6 +206,7 @@ public final class MonitoringUtil {
 	 */
 	private static String mapToValue(Object value, boolean isTitleCase) {
 		if (value == null) {
+			LOG.warn("The value is null, returning null");
 			return null;
 		}
 		if (value instanceof String str) {
@@ -229,6 +238,7 @@ public final class MonitoringUtil {
 	 */
 	private static String toTitleCase(String value) {
 		if (StringUtils.isNullOrEmpty(value) || value.equals("null")) {
+			LOG.warn(Constant.INVALID_VALUE_WARNING.formatted(value));
 			return null;
 		}
 		if (Util.isBooleanValue(value)) {
@@ -251,6 +261,7 @@ public final class MonitoringUtil {
 	private static String mapToUptime(String uptime) {
 		try {
 			if (StringUtils.isNullOrEmpty(uptime)) {
+				LOG.warn("The value is null or empty, returning null");
 				return null;
 			}
 
@@ -273,6 +284,7 @@ public final class MonitoringUtil {
 
 			return rs.toString().trim();
 		} catch (Exception e) {
+			LOG.error("Failed to mapToUptime with uptime: " + uptime, e);
 			return null;
 		}
 	}
@@ -289,6 +301,7 @@ public final class MonitoringUtil {
 	private static String mapToUptimeMin(String uptime) {
 		try {
 			if (StringUtils.isNullOrEmpty(uptime)) {
+				LOG.warn("The value is null or empty, returning null");
 				return null;
 			}
 
@@ -297,6 +310,7 @@ public final class MonitoringUtil {
 
 			return String.valueOf(minutes);
 		} catch (Exception e) {
+			LOG.error("Failed to mapToUptimeMin with uptime: " + uptime, e);
 			return null;
 		}
 	}

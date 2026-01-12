@@ -7,10 +7,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.http.HttpStatus;
 
+import javax.security.auth.login.FailedLoginException;
 import lombok.Getter;
 
 import com.avispl.symphony.api.common.error.InvalidArgumentException;
 import com.avispl.symphony.api.dal.error.CommandFailureException;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.Logger;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.utils.Util;
 import com.avispl.symphony.dal.communicator.SocketCommunicator;
@@ -26,12 +28,16 @@ import com.avispl.symphony.dal.util.StringUtils;
 public abstract class BaseCommunicator extends SocketCommunicator {
 	/** Lock for thread-safe operations. */
 	protected final ReentrantLock reentrantLock;
+	/** Logger used for recording diagnostic and runtime information. */
+	protected final Logger log;
 
+	/** Adapter property representing the device ID, used when sending commands to the device. */
 	@Getter
 	private String deviceId;
 
 	protected BaseCommunicator() {
 		this.reentrantLock = new ReentrantLock();
+		this.log = new Logger(super.logger);
 	}
 
 	@Override
@@ -153,6 +159,14 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 				}
 				default -> throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.NOT_FOUND.value());
 			}
+		} catch (FailedLoginException e) {
+			throw e;
+		} catch (Exception e) {
+			//	handle invalid control property
+			if (e instanceof CommandFailureException cmdEx && HttpStatus.BAD_REQUEST.value() == cmdEx.getStatusCode()) {
+				throw new InvalidArgumentException(Constant.CONTROL_PROPERTY_FAILED, cmdEx);
+			}
+			throw new IllegalStateException(Constant.FETCH_DATA_FAILED.formatted(command), e);
 		} finally {
 			this.disconnect();
 		}
