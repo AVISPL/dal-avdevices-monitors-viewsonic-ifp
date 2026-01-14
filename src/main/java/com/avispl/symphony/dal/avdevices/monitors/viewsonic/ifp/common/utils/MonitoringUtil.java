@@ -128,7 +128,7 @@ public final class MonitoringUtil {
 			case INPUT_SOURCE -> InputSource.getNameByCode(deviceSetting.getInputSource());
 //			case PIP_MODE -> mapToDefaultStatus(deviceGeneralSetting.getPipMode());
 			case TILING_MODE -> mapToDefaultStatus(deviceSetting.getTilingMode());
-			case VOLUME, VOLUME_VALUE -> Integer.parseInt(deviceSetting.getVolume());
+			case VOLUME -> Integer.parseInt(deviceSetting.getVolume());
 			case MUTE -> mapToDefaultStatus(deviceSetting.getMute());
 		};
 		if (value == null) {
@@ -153,13 +153,13 @@ public final class MonitoringUtil {
 		}
 		var value = switch (display) {
 			case BACKLIGHT_STATUS -> mapToDefaultStatus(deviceDisplay.getBacklightStatus());
-			case BACKLIGHT, BACKLIGHT_VALUE -> Integer.parseInt(deviceDisplay.getBacklight());
-//			case BLUE_LIGHT_FILTER, BLUE_LIGHT_FILTER_VALUE -> Integer.parseInt(deviceDisplay.getBluelightFilter());
-			case BRIGHTNESS, BRIGHTNESS_VALUE -> Integer.parseInt(deviceDisplay.getBrightness());
-			case COLOR, COLOR_VALUE -> Integer.parseInt(deviceDisplay.getColor());
-			case CONTRAST, CONTRAST_VALUE -> Integer.parseInt(deviceDisplay.getContrast());
-//			case HUE, HUE_VALUE -> Integer.parseInt(deviceDisplay.getTint());
-//			case SHARPNESS, SHARPNESS_VALUE -> Integer.parseInt(deviceDisplay.getSharpness());
+			case BACKLIGHT -> Integer.parseInt(deviceDisplay.getBacklight());
+//			case BLUE_LIGHT_FILTER -> Integer.parseInt(deviceDisplay.getBluelightFilter());
+			case BRIGHTNESS -> Integer.parseInt(deviceDisplay.getBrightness());
+			case COLOR -> Integer.parseInt(deviceDisplay.getColor());
+			case CONTRAST -> Integer.parseInt(deviceDisplay.getContrast());
+//			case HUE -> Integer.parseInt(deviceDisplay.getTint());
+//			case SHARPNESS -> Integer.parseInt(deviceDisplay.getSharpness());
 		};
 		if (value == null) {
 			LOG.warn("Skip mapToDisplay() because mapped value is null with %s".formatted(display));

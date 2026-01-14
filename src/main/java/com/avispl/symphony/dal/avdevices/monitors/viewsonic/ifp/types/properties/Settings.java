@@ -23,7 +23,6 @@ public enum Settings implements BaseProperty {
 	//	PIP_MODE("PIPMode"),
 	TILING_MODE("TilingMode"),
 	VOLUME("Volume(%)"),
-	VOLUME_VALUE("VolumeCurrentValue(%)"),
 	MUTE("Mute");
 
 	String name;
