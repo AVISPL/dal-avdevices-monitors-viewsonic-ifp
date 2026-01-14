@@ -18,12 +18,12 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.Logger;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceDisplay;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneral;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneralSetting;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceSetting;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.InputSource;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.AdapterMetadata;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Display;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.General;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.GeneralSetting;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Settings;
 import com.avispl.symphony.dal.util.StringUtils;
 
 /**
@@ -68,14 +68,18 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToAdapterMetadata(Properties versionProperties, AdapterMetadata adapterMetadata) {
 		if (versionProperties == null) {
-			LOG.warn("The versionProperties is null, returning empty property");
+			LOG.warn("Skip mapToAdapterMetadata() because versionProperties is null with %s".formatted(adapterMetadata));
 			return null;
 		}
-		return switch (adapterMetadata) {
+		var value = switch (adapterMetadata) {
 			case ADAPTER_UPTIME -> mapToUptime(versionProperties.getProperty(adapterMetadata.getProperty()));
 			case ADAPTER_UPTIME_MIN -> mapToUptimeMin(versionProperties.getProperty(adapterMetadata.getProperty()));
-			default -> mapToValue(versionProperties.getProperty(adapterMetadata.getProperty()));
+			default -> versionProperties.getProperty(adapterMetadata.getProperty());
 		};
+		if (value == null) {
+			LOG.warn("Skip mapToAdapterMetadata() because mapped value is null with %s".formatted(adapterMetadata));
+		}
+		return mapToValue(value);
 	}
 
 	/**
@@ -89,40 +93,48 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToGeneral(DeviceGeneral deviceGeneral, General general) {
 		if (deviceGeneral == null) {
-			LOG.warn("The deviceGeneral is null, returning empty property");
+			LOG.warn("Skip mapToGeneral() because deviceGeneral is null with %s".formatted(general));
 			return null;
 		}
-		return switch (general) {
-			case DEVICE_NAME -> mapToValue(deviceGeneral.getDeviceName());
-			case FIRMWARE_VERSION -> mapToValue(deviceGeneral.getFirmwareVersion());
-			case IP_ADDRESS -> mapToValue(deviceGeneral.getIpAddress());
-			case MAC_ADDRESS -> mapToValue(mapToMacAddress(deviceGeneral.getMacAddress()));
-			case POWER_STATUS -> mapToValue(mapToStatus(deviceGeneral.getPowerStatus(), Constant.STANDBY, Constant.ON));
-			case SERIAL_NUMBER -> mapToValue(deviceGeneral.getSerialNumber());
+		var value = switch (general) {
+			case DEVICE_NAME -> deviceGeneral.getDeviceName();
+			case FIRMWARE_VERSION -> deviceGeneral.getFirmwareVersion();
+			case IP_ADDRESS -> deviceGeneral.getIpAddress();
+			case MAC_ADDRESS -> mapToMacAddress(deviceGeneral.getMacAddress());
+			case POWER_STATUS -> mapToStatus(deviceGeneral.getPowerStatus(), Constant.STANDBY, Constant.ON);
+			case SERIAL_NUMBER -> deviceGeneral.getSerialNumber();
 		};
+		if (value == null) {
+			LOG.warn("Skip mapToGeneral() because mapped value is null with %s".formatted(general));
+		}
+		return mapToValue(value);
 	}
 
 	/**
-	 * Generates a general setting string from the given {@link DeviceGeneralSetting} and {@link GeneralSetting} enum.
+	 * Generates a general setting string from the given {@link DeviceSetting} and {@link Settings} enum.
 	 * <p>
 	 * Returns an empty value if {@code deviceGeneralSetting} is {@code null} or if all mapped properties are unavailable.
 	 *
-	 * @param deviceGeneralSetting the device general setting source
-	 * @param generalSetting the general setting property enum
+	 * @param deviceSetting the device general setting source
+	 * @param settings the general setting property enum
 	 * @return the general setting property string
 	 */
-	public static String mapToGeneralSettings(DeviceGeneralSetting deviceGeneralSetting, GeneralSetting generalSetting) {
-		if (deviceGeneralSetting == null) {
-			LOG.warn("The deviceGeneralSetting is null, returning empty property");
+	public static String mapToGeneralSettings(DeviceSetting deviceSetting, Settings settings) {
+		if (deviceSetting == null) {
+			LOG.warn("Skip mapToGeneralSettings() because deviceGeneralSetting is null with %s".formatted(settings));
 			return null;
 		}
-		return switch (generalSetting) {
-			case INPUT_SOURCE -> mapToValue(InputSource.getNameByCode(deviceGeneralSetting.getInputSource()));
-//			case PIP_MODE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getPipMode()));
-			case TILING_MODE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getTilingMode()));
-			case VOLUME, VOLUME_VALUE -> mapToValue(Integer.parseInt(deviceGeneralSetting.getVolume()));
-			case MUTE -> mapToValue(mapToDefaultStatus(deviceGeneralSetting.getMute()));
+		var value = switch (settings) {
+			case INPUT_SOURCE -> InputSource.getNameByCode(deviceSetting.getInputSource());
+//			case PIP_MODE -> mapToDefaultStatus(deviceGeneralSetting.getPipMode());
+			case TILING_MODE -> mapToDefaultStatus(deviceSetting.getTilingMode());
+			case VOLUME, VOLUME_VALUE -> Integer.parseInt(deviceSetting.getVolume());
+			case MUTE -> mapToDefaultStatus(deviceSetting.getMute());
 		};
+		if (value == null) {
+			LOG.warn("Skip mapToGeneralSettings() because mapped value is null with %s".formatted(settings));
+		}
+		return mapToValue(value);
 	}
 
 	/**
@@ -136,19 +148,23 @@ public final class MonitoringUtil {
 	 */
 	public static String mapToDisplay(DeviceDisplay deviceDisplay, Display display) {
 		if (deviceDisplay == null) {
-			LOG.warn("The deviceDisplay is null, returning empty property");
+			LOG.warn("Skip mapToDisplay() because deviceDisplay is null with %s".formatted(display));
 			return null;
 		}
-		return switch (display) {
-			case BACKLIGHT_STATUS -> mapToValue(mapToDefaultStatus(deviceDisplay.getBacklightStatus()));
-			case BACKLIGHT, BACKLIGHT_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBacklight()));
-//			case BLUE_LIGHT_FILTER, BLUE_LIGHT_FILTER_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBluelightFilter()));
-			case BRIGHTNESS, BRIGHTNESS_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getBrightness()));
-			case COLOR, COLOR_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getColor()));
-			case CONTRAST, CONTRAST_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getContrast()));
-//			case HUE, HUE_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getTint()));
-//			case SHARPNESS, SHARPNESS_VALUE -> mapToValue(Integer.parseInt(deviceDisplay.getSharpness()));
+		var value = switch (display) {
+			case BACKLIGHT_STATUS -> mapToDefaultStatus(deviceDisplay.getBacklightStatus());
+			case BACKLIGHT, BACKLIGHT_VALUE -> Integer.parseInt(deviceDisplay.getBacklight());
+//			case BLUE_LIGHT_FILTER, BLUE_LIGHT_FILTER_VALUE -> Integer.parseInt(deviceDisplay.getBluelightFilter());
+			case BRIGHTNESS, BRIGHTNESS_VALUE -> Integer.parseInt(deviceDisplay.getBrightness());
+			case COLOR, COLOR_VALUE -> Integer.parseInt(deviceDisplay.getColor());
+			case CONTRAST, CONTRAST_VALUE -> Integer.parseInt(deviceDisplay.getContrast());
+//			case HUE, HUE_VALUE -> Integer.parseInt(deviceDisplay.getTint());
+//			case SHARPNESS, SHARPNESS_VALUE -> Integer.parseInt(deviceDisplay.getSharpness());
 		};
+		if (value == null) {
+			LOG.warn("Skip mapToDisplay() because mapped value is null with %s".formatted(display));
+		}
+		return mapToValue(value);
 	}
 
 	private static String mapToMacAddress(String value) {
@@ -206,7 +222,7 @@ public final class MonitoringUtil {
 	 */
 	private static String mapToValue(Object value, boolean isTitleCase) {
 		if (value == null) {
-			LOG.warn("The value is null, returning null");
+			LOG.warn("Skip mapToValue() because the value is null");
 			return null;
 		}
 		if (value instanceof String str) {
@@ -261,7 +277,7 @@ public final class MonitoringUtil {
 	private static String mapToUptime(String uptime) {
 		try {
 			if (StringUtils.isNullOrEmpty(uptime)) {
-				LOG.warn("The value is null or empty, returning null");
+				LOG.warn("Skip mapToUptime() because the value is null or empty");
 				return null;
 			}
 
@@ -301,7 +317,7 @@ public final class MonitoringUtil {
 	private static String mapToUptimeMin(String uptime) {
 		try {
 			if (StringUtils.isNullOrEmpty(uptime)) {
-				LOG.warn("The value is null or empty, returning null");
+				LOG.warn("Skip mapToUptimeMin() because the value is null or empty");
 				return null;
 			}
 
