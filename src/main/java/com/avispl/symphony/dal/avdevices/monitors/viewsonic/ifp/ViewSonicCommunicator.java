@@ -24,15 +24,15 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.utils.Con
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.utils.MonitoringUtil;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceDisplay;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneral;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneralSetting;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceSetting;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.InputSource;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.DisplayCommand;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.GeneralCommand;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.GeneralSettingCommand;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.SettingCommand;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.AdapterMetadata;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Display;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.General;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.GeneralSetting;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Settings;
 
 /**
  * Main adapter class for View Sonic (Direct). Responsible for generating monitoring, controllable.
@@ -51,7 +51,7 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 	/** Stores the general information of the device */
 	private DeviceGeneral deviceGeneral;
 	/** Stores the general setting of the device */
-	private DeviceGeneralSetting deviceGeneralSetting;
+	private DeviceSetting deviceSetting;
 	/** Stores the display setting of the device */
 	private DeviceDisplay deviceDisplay;
 
@@ -62,7 +62,7 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 		this.localExtendedStatistics = new ExtendedStatistics();
 
 		this.deviceGeneral = new DeviceGeneral();
-		this.deviceGeneralSetting = new DeviceGeneralSetting();
+		this.deviceSetting = new DeviceSetting();
 		this.deviceDisplay = new DeviceDisplay();
 	}
 
@@ -79,7 +79,7 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 		Optional.ofNullable(this.localExtendedStatistics.getControllableProperties()).ifPresent(List::clear);
 
 		this.deviceGeneral = null;
-		this.deviceGeneralSetting = null;
+		this.deviceSetting = null;
 		this.deviceDisplay = null;
 
 		super.internalDestroy();
@@ -109,11 +109,11 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 				));
 				controllableProperties.addAll(ControlUtil.getDisplayControllers(this.deviceDisplay));
 			}
-			if (this.shouldShowGroup(Constant.GENERAL_SETTING_GROUP)) {
+			if (this.shouldShowGroup(Constant.SETTING_GROUP)) {
 				statistics.putAll(MonitoringUtil.generateProperties(
-						GeneralSetting.values(), Constant.GENERAL_SETTING_GROUP, property -> MonitoringUtil.mapToGeneralSettings(this.deviceGeneralSetting, property)
+						Settings.values(), Constant.SETTING_GROUP, property -> MonitoringUtil.mapToGeneralSettings(this.deviceSetting, property)
 				));
-				controllableProperties.addAll(ControlUtil.getGeneralSettingsControllers(this.deviceGeneralSetting));
+				controllableProperties.addAll(ControlUtil.getGeneralSettingsControllers(this.deviceSetting));
 			}
 
 			this.localExtendedStatistics.setStatistics(statistics);
@@ -146,14 +146,14 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 				this.send(DisplayCommand.SET_CONTRAST, ControlUtil.getRangeValue(controllableProperty.getValue()));
 			}
 			//	General settings
-			else if (GeneralSetting.INPUT_SOURCE.getPropertyName().equals(property)) {
-				this.send(GeneralSettingCommand.SET_INPUT_SOURCE, InputSource.getCodeByName(controllableProperty.getValue()));
-			} else if (GeneralSetting.TILING_MODE.getPropertyName().equals(property)) {
-				this.send(GeneralSettingCommand.SET_TILING_MODE, ControlUtil.getStatusValue(controllableProperty.getValue()));
-			} else if (GeneralSetting.VOLUME.getPropertyName().equals(property)) {
-				this.send(GeneralSettingCommand.SET_VOLUME, ControlUtil.getRangeValue(controllableProperty.getValue()));
-			} else if (GeneralSetting.MUTE.getPropertyName().equals(property)) {
-				this.send(GeneralSettingCommand.SET_MUTE, ControlUtil.getStatusValue(controllableProperty.getValue()));
+			else if (Settings.INPUT_SOURCE.getPropertyName().equals(property)) {
+				this.send(SettingCommand.SET_INPUT_SOURCE, InputSource.getCodeByName(controllableProperty.getValue()));
+			} else if (Settings.TILING_MODE.getPropertyName().equals(property)) {
+				this.send(SettingCommand.SET_TILING_MODE, ControlUtil.getStatusValue(controllableProperty.getValue()));
+			} else if (Settings.VOLUME.getPropertyName().equals(property)) {
+				this.send(SettingCommand.SET_VOLUME, ControlUtil.getRangeValue(controllableProperty.getValue()));
+			} else if (Settings.MUTE.getPropertyName().equals(property)) {
+				this.send(SettingCommand.SET_MUTE, ControlUtil.getStatusValue(controllableProperty.getValue()));
 			}
 		} finally {
 			this.reentrantLock.unlock();
@@ -200,12 +200,12 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 			this.deviceGeneral.setPowerStatus(this.send(GeneralCommand.GET_POWER_STATUS));
 			this.deviceGeneral.setSerialNumber(this.send(GeneralCommand.GET_SERIAL_NUMBER));
 		}
-		if (this.shouldShowGroup(Constant.GENERAL_SETTING_GROUP)) {
-			this.deviceGeneralSetting.setInputSource(this.send(GeneralSettingCommand.GET_INPUT_SOURCE));
+		if (this.shouldShowGroup(Constant.SETTING_GROUP)) {
+			this.deviceSetting.setInputSource(this.send(SettingCommand.GET_INPUT_SOURCE));
 //		this.deviceGeneralSetting.setPipMode(this.send(GeneralSettingCommand.GET_PIP_MODE));
-			this.deviceGeneralSetting.setTilingMode(this.send(GeneralSettingCommand.GET_TILING_MODE));
-			this.deviceGeneralSetting.setVolume(this.send(GeneralSettingCommand.GET_VOLUME));
-			this.deviceGeneralSetting.setMute(this.send(GeneralSettingCommand.GET_MUTE));
+			this.deviceSetting.setTilingMode(this.send(SettingCommand.GET_TILING_MODE));
+			this.deviceSetting.setVolume(this.send(SettingCommand.GET_VOLUME));
+			this.deviceSetting.setMute(this.send(SettingCommand.GET_MUTE));
 		}
 		if (this.shouldShowGroup(Constant.DISPLAY_GROUP)) {
 			this.deviceDisplay.setBacklightStatus(this.send(DisplayCommand.GET_BACKLIGHT_STATUS));

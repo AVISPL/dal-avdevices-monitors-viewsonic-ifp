@@ -33,7 +33,7 @@ import com.avispl.symphony.dal.util.StringUtils;
 public abstract class BaseCommunicator extends SocketCommunicator {
 	/** Set of supported group filter for {@link #displayPropertyGroups}. */
 	private static final Set<String> SUPPORTED_GROUP_FILTERS = new TreeSet<>(Set.of(
-			Constant.GENERAL_GROUP, Constant.DISPLAY_GROUP, Constant.GENERAL_SETTING_GROUP
+			Constant.GENERAL_GROUP, Constant.DISPLAY_GROUP, Constant.SETTING_GROUP
 	));
 
 	/** Lock for thread-safe operations. */
@@ -124,7 +124,7 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 		if (!CollectionUtils.containsAny(SUPPORTED_GROUP_FILTERS, checkedGroups)) {
 			this.log.warn(Constant.NO_VALID_DISPLAY_PROPERTY_GROUPS_WARNING.formatted(displayPropertyGroups));
 		} else {
-			this.displayPropertyGroups.clear();
+			this.displayPropertyGroups.removeIf(propertyGroup -> !Constant.GENERAL_GROUP.equals(propertyGroup));
 			checkedGroups.stream().filter(SUPPORTED_GROUP_FILTERS::contains).forEach(this.displayPropertyGroups::add);
 		}
 	}

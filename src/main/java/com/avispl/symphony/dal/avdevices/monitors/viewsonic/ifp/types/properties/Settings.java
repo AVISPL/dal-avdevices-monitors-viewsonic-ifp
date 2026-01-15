@@ -18,17 +18,16 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants
 @RequiredArgsConstructor
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public enum GeneralSetting implements BaseProperty {
+public enum Settings implements BaseProperty {
 	INPUT_SOURCE("InputSource"),
 	//	PIP_MODE("PIPMode"),
 	TILING_MODE("TilingMode"),
 	VOLUME("Volume(%)"),
-	VOLUME_VALUE("VolumeCurrentValue(%)"),
 	MUTE("Mute");
 
 	String name;
 
 	public String getPropertyName() {
-		return Constant.GENERAL_SETTING_GROUP + Constant.HASH + name;
+		return Constant.SETTING_GROUP + Constant.HASH + name;
 	}
 }

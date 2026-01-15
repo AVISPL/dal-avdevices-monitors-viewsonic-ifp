@@ -19,11 +19,11 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.Logger;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceDisplay;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneral;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceGeneralSetting;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.models.DeviceSetting;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.InputSource;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Display;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.General;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.GeneralSetting;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Settings;
 
 /**
  * Utility class providing helper methods for controllable property.
@@ -43,7 +43,7 @@ public final class ControlUtil {
 	 */
 	public static List<AdvancedControllableProperty> getGeneralControllers(DeviceGeneral deviceGeneral) {
 		if (deviceGeneral == null) {
-			LOG.warn("The deviceGeneral is null, returning the empty list");
+			LOG.warn("Skip general controllable properties retrieval, the device general data is null");
 			return Collections.emptyList();
 		}
 		return Collections.singletonList(
@@ -52,22 +52,22 @@ public final class ControlUtil {
 	}
 
 	/**
-	 * Generates a list of {@link AdvancedControllableProperty} for the given {@link DeviceGeneralSetting}.
+	 * Generates a list of {@link AdvancedControllableProperty} for the given {@link DeviceSetting}.
 	 *
-	 * @param deviceGeneralSetting the {@link DeviceGeneralSetting} to build controllers from; if null, an empty list is returned
+	 * @param deviceSetting the {@link DeviceSetting} to build controllers from; if null, an empty list is returned
 	 * @return list of controllable properties for the general settings
 	 */
-	public static List<AdvancedControllableProperty> getGeneralSettingsControllers(DeviceGeneralSetting deviceGeneralSetting) {
-		if (deviceGeneralSetting == null) {
-			LOG.warn("The deviceGeneralSetting is null, returning the empty list");
+	public static List<AdvancedControllableProperty> getGeneralSettingsControllers(DeviceSetting deviceSetting) {
+		if (deviceSetting == null) {
+			LOG.warn("Skip general settings controllable properties retrieval, the device setting data is null");
 			return Collections.emptyList();
 		}
 		return List.of(
-				createDropdown(GeneralSetting.INPUT_SOURCE.getPropertyName(), InputSource.getNames(), InputSource.getNameByCode(deviceGeneralSetting.getInputSource())),
+				createDropdown(Settings.INPUT_SOURCE.getPropertyName(), InputSource.getNames(), InputSource.getNameByCode(deviceSetting.getInputSource())),
 //				createSwitch(GeneralSetting.PIP_MODE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getPipMode())),
-				createSwitch(GeneralSetting.TILING_MODE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getTilingMode())),
-				createSlider(GeneralSetting.VOLUME.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceGeneralSetting.getVolume())),
-				createSwitch(GeneralSetting.MUTE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getMute()))
+				createSwitch(Settings.TILING_MODE.getPropertyName(), Integer.parseInt(deviceSetting.getTilingMode())),
+				createSlider(Settings.VOLUME.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceSetting.getVolume())),
+				createSwitch(Settings.MUTE.getPropertyName(), Integer.parseInt(deviceSetting.getMute()))
 		);
 	}
 
@@ -79,7 +79,7 @@ public final class ControlUtil {
 	 */
 	public static List<AdvancedControllableProperty> getDisplayControllers(DeviceDisplay deviceDisplay) {
 		if (deviceDisplay == null) {
-			LOG.warn("The deviceDisplay is null, returning the empty list");
+			LOG.warn("Skip display controllable properties retrieval, the device display data is null");
 			return Collections.emptyList();
 		}
 		return List.of(

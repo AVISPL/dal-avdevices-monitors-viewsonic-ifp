@@ -18,7 +18,7 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants
 @RequiredArgsConstructor
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public enum GeneralSettingCommand implements BaseCommand {
+public enum SettingCommand implements BaseCommand {
 	GET_INPUT_SOURCE(Constant.GET_COMMAND_TYPE, "j"),
 	SET_INPUT_SOURCE(Constant.SET_COMMAND_TYPE, "\""),
 	GET_PIP_MODE(Constant.GET_COMMAND_TYPE, "t"),

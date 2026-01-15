@@ -46,7 +46,7 @@ public final class Constant {
 	//	Groups
 	public static final String GENERAL_GROUP = "General";
 	public static final String ADAPTER_METADATA_GROUP = "AdapterMetadata";
-	public static final String GENERAL_SETTING_GROUP = "GeneralSettings";
+	public static final String SETTING_GROUP = "Settings";
 	public static final String DISPLAY_GROUP = "Display";
 
 	//	Warning messages
