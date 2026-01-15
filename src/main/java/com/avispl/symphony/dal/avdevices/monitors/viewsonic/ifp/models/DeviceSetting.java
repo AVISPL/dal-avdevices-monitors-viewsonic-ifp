@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
-public class DeviceGeneralSetting {
+public class DeviceSetting {
 	String inputSource;
 	String pipMode;
 	String tilingMode;

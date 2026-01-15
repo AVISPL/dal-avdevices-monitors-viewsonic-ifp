@@ -45,7 +45,7 @@ class ViewSonicCommunicatorTest {
 	@Test
 	void testGetMultipleStatistics() throws Exception {
 		this.communicator.setDeviceId("01");
-		this.communicator.setDisplayPropertyGroups(Constant.GENERAL_SETTING_GROUP);
+		this.communicator.setDisplayPropertyGroups(Constant.ALL);
 		this.extendedStatistics = (ExtendedStatistics) this.communicator.getMultipleStatistics().get(0);
 		Map<String, String> statistics = this.extendedStatistics.getStatistics();
 
@@ -59,7 +59,7 @@ class ViewSonicCommunicatorTest {
 		Map<String, String> statistics = this.extendedStatistics.getStatistics();
 		Assertions.assertEquals(Constant.GENERAL_GROUP, this.communicator.getDisplayPropertyGroups());
 		Assertions.assertTrue(statistics.keySet().stream()
-				.noneMatch(k -> k.startsWith(Constant.DISPLAY_GROUP) && k.startsWith(Constant.GENERAL_SETTING_GROUP)));
+				.noneMatch(k -> k.startsWith(Constant.DISPLAY_GROUP) && k.startsWith(Constant.SETTING_GROUP)));
 	}
 
 	@Test
@@ -81,7 +81,7 @@ class ViewSonicCommunicatorTest {
 		groups.put(Constant.GENERAL_GROUP, this.filterGroupStatistics(statistics, null));
 		groups.put(Constant.ADAPTER_METADATA_GROUP, this.filterGroupStatistics(statistics, Constant.ADAPTER_METADATA_GROUP));
 		groups.put(Constant.DISPLAY_GROUP, this.filterGroupStatistics(statistics, Constant.DISPLAY_GROUP));
-		groups.put(Constant.GENERAL_SETTING_GROUP, this.filterGroupStatistics(statistics, Constant.GENERAL_SETTING_GROUP));
+		groups.put(Constant.SETTING_GROUP, this.filterGroupStatistics(statistics, Constant.SETTING_GROUP));
 
 		for (Map<String, String> initGroup : groups.values()) {
 			for (Map.Entry<String, String> initStatistics : initGroup.entrySet()) {
