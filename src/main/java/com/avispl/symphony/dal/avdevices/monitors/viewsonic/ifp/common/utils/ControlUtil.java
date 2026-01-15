@@ -43,7 +43,7 @@ public final class ControlUtil {
 	 */
 	public static List<AdvancedControllableProperty> getGeneralControllers(DeviceGeneral deviceGeneral) {
 		if (deviceGeneral == null) {
-			LOG.warn("Skip getGeneralControllers() because the deviceGeneral is null");
+			LOG.warn("Skip general controllable properties retrieval, the device general data is null");
 			return Collections.emptyList();
 		}
 		return Collections.singletonList(
@@ -59,7 +59,7 @@ public final class ControlUtil {
 	 */
 	public static List<AdvancedControllableProperty> getGeneralSettingsControllers(DeviceSetting deviceSetting) {
 		if (deviceSetting == null) {
-			LOG.warn("Skip getGeneralSettingsControllers() because the deviceGeneralSetting is null");
+			LOG.warn("Skip general settings controllable properties retrieval, the device setting data is null");
 			return Collections.emptyList();
 		}
 		return List.of(
@@ -79,7 +79,7 @@ public final class ControlUtil {
 	 */
 	public static List<AdvancedControllableProperty> getDisplayControllers(DeviceDisplay deviceDisplay) {
 		if (deviceDisplay == null) {
-			LOG.warn("Skip getDisplayControllers() because the deviceDisplay is null");
+			LOG.warn("Skip display controllable properties retrieval, the device display data is null");
 			return Collections.emptyList();
 		}
 		return List.of(
