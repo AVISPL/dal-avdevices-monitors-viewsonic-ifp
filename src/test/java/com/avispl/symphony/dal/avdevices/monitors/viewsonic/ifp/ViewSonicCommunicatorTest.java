@@ -13,7 +13,9 @@ import org.junit.jupiter.api.Test;
 import com.avispl.symphony.api.dal.dto.control.ControllableProperty;
 import com.avispl.symphony.api.dal.dto.monitor.ExtendedStatistics;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.InputSource;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Display;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.properties.Settings;
 
 /**
  * Unit tests for the {@link ViewSonicCommunicator} class.
@@ -74,6 +76,19 @@ class ViewSonicCommunicatorTest {
 		var statistics = this.extendedStatistics.getStatistics();
 
 		Assertions.assertEquals("20", statistics.get(testedProperty));
+	}
+
+	@Test
+	void testControlPropertiesWithInputSource() throws Exception {
+		this.communicator.setDeviceId("01");
+		this.extendedStatistics = (ExtendedStatistics) this.communicator.getMultipleStatistics().get(0);
+		var testedProperty = Settings.INPUT_SOURCE.getPropertyName();
+		var controllableProperty = new ControllableProperty(testedProperty, InputSource.AV.getName(), null);
+
+		Assertions.assertThrows(UnsupportedOperationException.class, () -> this.communicator.controlProperty(controllableProperty));
+		this.extendedStatistics = (ExtendedStatistics) this.communicator.getMultipleStatistics().get(0);
+		var statistics = this.extendedStatistics.getStatistics();
+		this.verifyStatistics(statistics);
 	}
 
 	private void verifyStatistics(Map<String, String> statistics) {
