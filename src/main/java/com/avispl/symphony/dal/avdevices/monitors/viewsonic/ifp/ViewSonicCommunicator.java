@@ -12,6 +12,7 @@ import java.util.Properties;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import com.avispl.symphony.api.common.error.InvalidArgumentException;
 import com.avispl.symphony.api.dal.control.Controller;
 import com.avispl.symphony.api.dal.dto.control.AdvancedControllableProperty;
 import com.avispl.symphony.api.dal.dto.control.ControllableProperty;
@@ -147,7 +148,11 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 			}
 			//	General settings
 			else if (Settings.INPUT_SOURCE.getPropertyName().equals(property)) {
-				this.send(SettingCommand.SET_INPUT_SOURCE, InputSource.getCodeByName(controllableProperty.getValue()));
+				try {
+					this.send(SettingCommand.SET_INPUT_SOURCE, InputSource.getCodeByName(controllableProperty.getValue()));
+				} catch (InvalidArgumentException e) {
+					throw new UnsupportedOperationException("Failed to change the input source because the selected value '%s' is not supported.".formatted(controllableProperty.getValue()));
+				}
 			} else if (Settings.TILING_MODE.getPropertyName().equals(property)) {
 				this.send(SettingCommand.SET_TILING_MODE, ControlUtil.getStatusValue(controllableProperty.getValue()));
 			} else if (Settings.VOLUME.getPropertyName().equals(property)) {
