@@ -32,9 +32,9 @@ public final class Constant {
 	public static final String COMMAND_LENGTH = "8";
 	public static final String GET_COMMAND_TYPE = "g";
 	public static final String SET_COMMAND_TYPE = "s";
-	public static final String GET_RESPONSE_HEADER_1 = "201";
-	public static final String GET_RESPONSE_HEADER_2 = "801";
-	public static final String SET_RESPONSE_HEADER = "401";
+	public static final String RESPONSE_HEADER_1 = "201";
+	public static final String RESPONSE_HEADER_2 = "801";
+	public static final String RESPONSE_HEADER_3 = "401";
 	public static final char NEGATIVE_ACK = '-';
 	public static final String OFF = "Off";
 	public static final String STANDBY = "Standby";

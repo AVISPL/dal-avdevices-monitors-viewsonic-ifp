@@ -20,6 +20,7 @@ import com.avispl.symphony.api.dal.error.CommandFailureException;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.Logger;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.utils.Util;
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.SettingCommand;
 import com.avispl.symphony.dal.communicator.SocketCommunicator;
 import com.avispl.symphony.dal.util.StringUtils;
 
@@ -180,60 +181,133 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 	}
 
 	/**
-	 * Sends a protocol-formatted request to the device and parses the response according to the protocol specification.
+	 * Sends a protocol-formatted command to the device and parses the response.
 	 *
-	 * <p>The response is processed by:
+	 * <p>This method performs the following steps:
 	 * <ul>
-	 *   <li>Removing carriage return characters</li>
-	 *   <li>Trimming leading and trailing whitespace</li>
-	 *   <li>Validating the response header and command code</li>
-	 *   <li>Extracting the response payload when applicable</li>
+	 *   <li>Builds the normalized command using protocol rules</li>
+	 *   <li>Sends the request to the device</li>
+	 *   <li>Retries on gateway-level failures up to a maximum number of attempts</li>
+	 *   <li>Normalizes the raw response</li>
+	 *   <li>Validates and parses the response based on command type</li>
 	 * </ul>
 	 *
-	 * @param <C> the command type, which must be an {@link Enum} implementing {@link BaseCommand}
-	 * @param command the command associated with the request
-	 * @param request the command-specific request payload (without protocol header)
-	 * @return the parsed response payload for a successful command
-	 * @throws CommandFailureException if the response is invalid, does not match the command, or the device does not respond
-	 * @throws Exception if a transport-level error occurs while communicating with the device
+	 * @param <C> the command enum type implementing {@link BaseCommand}
+	 * @param command the command definition associated with the request
+	 * @param request the command-specific payload (without protocol header)
+	 * @return the parsed response payload if the command is successful
+	 * @throws FailedLoginException if authentication with the device fails
+	 * @throws InvalidArgumentException if the device rejects the control property
+	 * @throws IllegalStateException if the request fails after retries or a communication error occurs
+	 * @throws Exception if a transport-level error occurs
 	 */
 	private <C extends Enum<C> & BaseCommand> String sendAndParse(C command, String request) throws Exception {
-		try {
-			var normalizedCommand = Constant.COMMAND_LENGTH + this.deviceId + request;
-			var response = super.send(normalizedCommand.getBytes(StandardCharsets.US_ASCII));
-			if (response.length == 1 && response[0] == (byte) -1) {  //	handle no response
-				throw new CommandFailureException(this.getAddress(), normalizedCommand, null, HttpStatus.NOT_FOUND.value());
-			}
-			var normalizedResponse = new String(response, StandardCharsets.US_ASCII).replace(Constant.CR, Constant.EMPTY).trim();
-			if (normalizedResponse.length() < 4) {  //	handle undefine response
-				throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.INTERNAL_SERVER_ERROR.value());
-			}
-			switch (normalizedResponse.substring(0, 3)) {
-				case Constant.GET_RESPONSE_HEADER_1, Constant.GET_RESPONSE_HEADER_2 -> {  //	handle GET response
-					var expectedPrefix = Constant.COMMAND_LENGTH + this.deviceId + command.getType() + command.getCode();
-					if (normalizedResponse.charAt(4) != command.getCode().charAt(0) || !normalizedCommand.startsWith(expectedPrefix)) {
-						throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
-					}
-					return normalizedResponse.substring(expectedPrefix.length());
+		var normalizedCommand = Constant.COMMAND_LENGTH + this.deviceId + request;
+		String currentParsedResponse = null;
+		var maxRetry = 3;
+
+		for (int atemp = 1; atemp <= maxRetry; atemp++) {
+			try {
+				var response = this.sendRequest(normalizedCommand);
+				var normalizedResponse = this.normalizeResponse(response);
+				currentParsedResponse = this.parseResponse(command, normalizedCommand, normalizedResponse);
+				return currentParsedResponse;
+			} catch (FailedLoginException e) {
+				this.disconnect();
+				throw e;
+			} catch (Exception e) {
+				this.disconnect();
+				if (Constant.SET_COMMAND_TYPE.equals(command.getType())) {
+					throw new InvalidArgumentException(Constant.CONTROL_PROPERTY_FAILED, e);
 				}
-				case Constant.SET_RESPONSE_HEADER -> {  //	handle SET response
-					if (normalizedResponse.charAt(3) == Constant.NEGATIVE_ACK) {
-						throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_REQUEST.value());
-					}
-					return normalizedResponse;
+				if (atemp < maxRetry) {
+					this.log.error("Invalid response '%s' for request '%s', retrying send this request".formatted(currentParsedResponse, normalizedCommand), e);
+					Thread.sleep(400);
+					continue;
 				}
-				default -> throw new CommandFailureException(this.getAddress(), normalizedCommand, normalizedResponse, HttpStatus.NOT_FOUND.value());
+				throw new IllegalStateException(Constant.FETCH_DATA_FAILED.formatted(command), e);
+			} finally {
+				Thread.sleep(100);
 			}
-		} catch (FailedLoginException e) {
-			throw e;
-		} catch (Exception e) {
-			//	handle invalid control property
-			if (e instanceof CommandFailureException cmdEx && HttpStatus.BAD_REQUEST.value() == cmdEx.getStatusCode()) {
-				throw new InvalidArgumentException(Constant.CONTROL_PROPERTY_FAILED, cmdEx);
-			}
-			throw new IllegalStateException(Constant.FETCH_DATA_FAILED.formatted(command), e);
-		} finally {
-			this.disconnect();
 		}
+		return null;
+	}
+
+	/**
+	 * Sends a normalized command to the device and returns the raw response.
+	 * If the device does not respond, a {@link CommandFailureException} is thrown.
+	 *
+	 * @param normalizedCommand the fully formatted command string
+	 * @return the raw response bytes from the device
+	 * @throws CommandFailureException if the device does not return any response
+	 * @throws Exception if a transport-level error occurs
+	 */
+	private byte[] sendRequest(String normalizedCommand) throws Exception {
+		var response = super.send(normalizedCommand.getBytes(StandardCharsets.US_ASCII));
+		if (response.length == 1 && response[0] == (byte) -1) {  //	handle no response
+			throw new CommandFailureException(this.getAddress(), normalizedCommand, null, HttpStatus.NOT_FOUND.value());
+		}
+		return response;
+	}
+
+	/**
+	 * Normalizes the raw response returned from the device.
+	 * <p>This method:
+	 * <ul>
+	 *   <li>Converts bytes to an ASCII string</li>
+	 *   <li>Removes carriage return characters</li>
+	 *   <li>Trims leading and trailing whitespace</li>
+	 * </ul>
+	 *
+	 * @param response the raw response bytes
+	 * @return the normalized response string
+	 * @throws CommandFailureException if the response is too short or invalid
+	 */
+	private String normalizeResponse(byte[] response) {
+		var normalizedResponse = new String(response, StandardCharsets.US_ASCII).replace(Constant.CR, Constant.EMPTY).trim();
+		if (normalizedResponse.length() < 4) {  //	handle undefine response
+			throw new CommandFailureException(getAddress(), null, normalizedResponse, HttpStatus.INTERNAL_SERVER_ERROR.value());
+		}
+		return normalizedResponse;
+	}
+
+	/**
+	 * Parses and validates the normalized response based on the command type.
+	 * <p>Supported behaviors:
+	 * <ul>
+	 *   <li>GET response: validates header, command type, and command code, then extracts payload</li>
+	 *   <li>SET response: checks acknowledgment status</li>
+	 * </ul>
+	 *
+	 * @param <C> the command enum type implementing {@link BaseCommand}
+	 * @param command the original command definition
+	 * @param normalizedCommand the normalized command sent to the device
+	 * @param normalizedResponse the normalized response string
+	 * @return the parsed response payload
+	 * @throws CommandFailureException if the response is invalid, mismatched, or rejected
+	 */
+	private <C extends Enum<C> & BaseCommand> String parseResponse(C command, String normalizedCommand, String normalizedResponse) {
+		return switch (normalizedResponse.substring(0, 3)) {
+			case Constant.RESPONSE_HEADER_1, Constant.RESPONSE_HEADER_2 -> {
+				if (SettingCommand.SET_VOLUME.equals(command)) {
+					var volumePrefix = Constant.COMMAND_LENGTH + deviceId + "rf";
+					if (normalizedResponse.startsWith(volumePrefix)) {
+						yield normalizedResponse.substring(volumePrefix.length());
+					}
+				}
+				var expectedPrefix = Constant.COMMAND_LENGTH + deviceId + command.getType() + command.getCode();
+				if (normalizedResponse.charAt(4) != command.getCode().charAt(0) || !normalizedCommand.startsWith(expectedPrefix)) {
+					throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
+				}
+				yield normalizedResponse.substring(expectedPrefix.length());
+			}
+			case Constant.RESPONSE_HEADER_3 -> {
+				if (normalizedResponse.charAt(3) == Constant.NEGATIVE_ACK) {
+					throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_REQUEST.value());
+				}
+				yield normalizedResponse;
+			}
+			default -> throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.NOT_FOUND.value());
+		};
 	}
 }
