@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 public final class Constant {
 	//	Formats
 	public static final String PROPERTY_FORMAT = "%s#%s";
-	public static final String NUMBER_FORMAT = "\\d+";
 	public static final String TWO_DIGIT_NUMBER_FORMAT = "%02d";
 	public static final String THREE_DIGIT_NUMBER_FORMAT = "%03d";
 	public static final String MAC_PAIR_REGEX = "..(?!$)";
@@ -29,12 +28,12 @@ public final class Constant {
 
 	//	Values
 	public static final String NOT_AVAILABLE = "N/A";
-	public static final String COMMAND_LENGTH = "8";
+	public static final String ACK_RESPONSE_LENGTH = "8";
+	public static final String STATUS_RESPONSE_LENGTH = "4";
 	public static final String GET_COMMAND_TYPE = "g";
 	public static final String SET_COMMAND_TYPE = "s";
-	public static final String GET_RESPONSE_HEADER_1 = "201";
-	public static final String GET_RESPONSE_HEADER_2 = "801";
-	public static final String SET_RESPONSE_HEADER = "401";
+	public static final String ACK_RESPONSE_HEADER_1 = "2";
+	public static final String ACK_RESPONSE_HEADER_2 = "8";
 	public static final char NEGATIVE_ACK = '-';
 	public static final String OFF = "Off";
 	public static final String STANDBY = "Standby";

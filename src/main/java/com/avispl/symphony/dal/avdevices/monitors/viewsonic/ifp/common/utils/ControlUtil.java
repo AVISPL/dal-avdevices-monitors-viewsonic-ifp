@@ -47,7 +47,7 @@ public final class ControlUtil {
 			return Collections.emptyList();
 		}
 		return Collections.singletonList(
-				createCustomSwitch(General.POWER_STATUS.getName(), Constant.STANDBY, Constant.ON, Integer.parseInt(deviceGeneral.getPowerStatus()))
+				createCustomSwitch(General.POWER_STATUS.getName(), Constant.STANDBY, Constant.ON, Util.toInt(deviceGeneral.getPowerStatus()))
 		);
 	}
 
@@ -64,10 +64,10 @@ public final class ControlUtil {
 		}
 		return List.of(
 				createDropdown(Settings.INPUT_SOURCE.getPropertyName(), InputSource.getNames(), InputSource.getNameByCode(deviceSetting.getInputSource())),
-//				createSwitch(GeneralSetting.PIP_MODE.getPropertyName(), Integer.parseInt(deviceGeneralSetting.getPipMode())),
-				createSwitch(Settings.TILING_MODE.getPropertyName(), Integer.parseInt(deviceSetting.getTilingMode())),
-				createSlider(Settings.VOLUME.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceSetting.getVolume())),
-				createSwitch(Settings.MUTE.getPropertyName(), Integer.parseInt(deviceSetting.getMute()))
+//				createSwitch(GeneralSetting.PIP_MODE.getPropertyName(), Util.toInt(deviceGeneralSetting.getPipMode())),
+				createSwitch(Settings.TILING_MODE.getPropertyName(), Util.toInt(deviceSetting.getTilingMode())),
+				createSlider(Settings.VOLUME.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceSetting.getVolume())),
+				createSwitch(Settings.MUTE.getPropertyName(), Util.toInt(deviceSetting.getMute()))
 		);
 	}
 
@@ -83,14 +83,14 @@ public final class ControlUtil {
 			return Collections.emptyList();
 		}
 		return List.of(
-				createSwitch(Display.BACKLIGHT_STATUS.getPropertyName(), Integer.parseInt(deviceDisplay.getBacklightStatus())),
-				createSlider(Display.BACKLIGHT.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getBacklight())),
-//				createSlider(Display.BLUE_LIGHT_FILTER.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getBluelightFilter())),
-				createSlider(Display.BRIGHTNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getBrightness())),
-				createSlider(Display.COLOR.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getColor())),
-				createSlider(Display.CONTRAST.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getContrast()))
-//				createSlider(Display.HUE.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getTint())),
-//				createSlider(Display.SHARPNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Float.valueOf(deviceDisplay.getSharpness()))
+				createSwitch(Display.BACKLIGHT_STATUS.getPropertyName(), Util.toInt(deviceDisplay.getBacklightStatus())),
+				createSlider(Display.BACKLIGHT.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBacklight())),
+//				createSlider(Display.BLUE_LIGHT_FILTER.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBluelightFilter())),
+				createSlider(Display.BRIGHTNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBrightness())),
+				createSlider(Display.COLOR.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getColor())),
+				createSlider(Display.CONTRAST.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getContrast()))
+//				createSlider(Display.HUE.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getTint())),
+//				createSlider(Display.SHARPNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getSharpness()))
 		);
 	}
 

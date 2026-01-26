@@ -14,6 +14,8 @@ public interface BaseCommand {
 
 	String getCode();
 
+	boolean isGetCommand();
+
 	/**
 	 * Generates a command string using the default value.
 	 * <p>
