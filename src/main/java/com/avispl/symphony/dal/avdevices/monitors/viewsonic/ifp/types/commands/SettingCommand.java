@@ -19,17 +19,18 @@ import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum SettingCommand implements BaseCommand {
-	GET_INPUT_SOURCE(Constant.GET_COMMAND_TYPE, "j"),
-	SET_INPUT_SOURCE(Constant.SET_COMMAND_TYPE, "\""),
-	GET_PIP_MODE(Constant.GET_COMMAND_TYPE, "t"),
-	SET_PIP_MODE(Constant.SET_COMMAND_TYPE, "9"),
-	GET_TILING_MODE(Constant.GET_COMMAND_TYPE, "v"),
-	SET_TILING_MODE(Constant.SET_COMMAND_TYPE, "P"),
-	GET_VOLUME(Constant.GET_COMMAND_TYPE, "f"),
-	SET_VOLUME(Constant.SET_COMMAND_TYPE, "5"),
-	GET_MUTE(Constant.GET_COMMAND_TYPE, "g"),
-	SET_MUTE(Constant.SET_COMMAND_TYPE, "6");
+	GET_INPUT_SOURCE(Constant.GET_COMMAND_TYPE, "j", true),
+	SET_INPUT_SOURCE(Constant.SET_COMMAND_TYPE, "\"", false),
+	GET_PIP_MODE(Constant.GET_COMMAND_TYPE, "t", true),
+	SET_PIP_MODE(Constant.SET_COMMAND_TYPE, "9", false),
+	GET_TILING_MODE(Constant.GET_COMMAND_TYPE, "v", true),
+	SET_TILING_MODE(Constant.SET_COMMAND_TYPE, "P", false),
+	GET_VOLUME(Constant.GET_COMMAND_TYPE, "f", true),
+	SET_VOLUME(Constant.SET_COMMAND_TYPE, "5", false),
+	GET_MUTE(Constant.GET_COMMAND_TYPE, "g", true),
+	SET_MUTE(Constant.SET_COMMAND_TYPE, "6", false);
 
 	String type;
 	String code;
+	boolean isGetCommand;
 }

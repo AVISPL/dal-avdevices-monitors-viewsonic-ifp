@@ -20,7 +20,6 @@ import com.avispl.symphony.api.dal.error.CommandFailureException;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.Logger;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.utils.Util;
-import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types.commands.SettingCommand;
 import com.avispl.symphony.dal.communicator.SocketCommunicator;
 import com.avispl.symphony.dal.util.StringUtils;
 
@@ -84,7 +83,7 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 	 */
 	public void setDeviceId(String deviceId) {
 		this.deviceId = null;
-		if (StringUtils.isNullOrEmpty(deviceId, true) || Util.isNonNumeric(deviceId)) {
+		if (StringUtils.isNullOrEmpty(deviceId, true) || Util.isNonInt(deviceId)) {
 			return;
 		}
 		var parsedDeviceId = Integer.parseInt(deviceId);
@@ -202,16 +201,14 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 	 * @throws Exception if a transport-level error occurs
 	 */
 	private <C extends Enum<C> & BaseCommand> String sendAndParse(C command, String request) throws Exception {
-		var normalizedCommand = Constant.COMMAND_LENGTH + this.deviceId + request;
-		String currentParsedResponse = null;
+		var normalizedCommand = Constant.ACK_RESPONSE_LENGTH + this.deviceId + request;
 		var maxRetry = 3;
 
-		for (int atemp = 1; atemp <= maxRetry; atemp++) {
+		for (int attemp = 1; attemp <= maxRetry; attemp++) {
 			try {
 				var response = this.sendRequest(normalizedCommand);
 				var normalizedResponse = this.normalizeResponse(response);
-				currentParsedResponse = this.parseResponse(command, normalizedCommand, normalizedResponse);
-				return currentParsedResponse;
+				return this.parseResponse(command, normalizedCommand, normalizedResponse);
 			} catch (FailedLoginException e) {
 				this.disconnect();
 				throw e;
@@ -220,8 +217,8 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 				if (Constant.SET_COMMAND_TYPE.equals(command.getType())) {
 					throw new InvalidArgumentException(Constant.CONTROL_PROPERTY_FAILED, e);
 				}
-				if (atemp < maxRetry) {
-					this.log.error("Invalid response '%s' for request '%s', retrying send this request".formatted(currentParsedResponse, normalizedCommand), e);
+				if (attemp < maxRetry) {
+					this.log.error("Attempt %s failed for request '%s', retrying".formatted(attemp, normalizedCommand), e);
 					Thread.sleep(400);
 					continue;
 				}
@@ -230,6 +227,7 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 				Thread.sleep(100);
 			}
 		}
+		this.log.warn("All %s attempts failed for request='%s'. Returning null response.".formatted(maxRetry, normalizedCommand));
 		return null;
 	}
 
@@ -287,27 +285,34 @@ public abstract class BaseCommunicator extends SocketCommunicator {
 	 * @throws CommandFailureException if the response is invalid, mismatched, or rejected
 	 */
 	private <C extends Enum<C> & BaseCommand> String parseResponse(C command, String normalizedCommand, String normalizedResponse) {
-		return switch (normalizedResponse.substring(0, 3)) {
-			case Constant.RESPONSE_HEADER_1, Constant.RESPONSE_HEADER_2 -> {
-				if (SettingCommand.SET_VOLUME.equals(command)) {
-					var volumePrefix = Constant.COMMAND_LENGTH + deviceId + "rf";
-					if (normalizedResponse.startsWith(volumePrefix)) {
-						yield normalizedResponse.substring(volumePrefix.length());
-					}
-				}
-				var expectedPrefix = Constant.COMMAND_LENGTH + deviceId + command.getType() + command.getCode();
-				if (normalizedResponse.charAt(4) != command.getCode().charAt(0) || !normalizedCommand.startsWith(expectedPrefix)) {
-					throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
-				}
-				yield normalizedResponse.substring(expectedPrefix.length());
+		if (normalizedResponse.length() < 4) {
+			throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.NOT_FOUND.value());
+		}
+		var statusResponseHeader = Constant.STATUS_RESPONSE_LENGTH + this.deviceId;
+		//	Handle NON-GET response
+		if (!command.isGetCommand()) {
+			if ((statusResponseHeader + Constant.NEGATIVE_ACK).equals(normalizedResponse)) {
+				throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_REQUEST.value());
 			}
-			case Constant.RESPONSE_HEADER_3 -> {
-				if (normalizedResponse.charAt(3) == Constant.NEGATIVE_ACK) {
-					throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_REQUEST.value());
-				}
-				yield normalizedResponse;
+			return normalizedResponse;
+		}
+		var responseHeader = normalizedResponse.substring(0, 3);
+		//	Handle ACK response
+		if ((Constant.ACK_RESPONSE_HEADER_1 + this.deviceId).equals(responseHeader)
+				|| (Constant.ACK_RESPONSE_HEADER_2 + this.deviceId).equals(responseHeader)) {
+			var expectedPrefix = Constant.ACK_RESPONSE_LENGTH + deviceId + command.getType() + command.getCode();
+			if (normalizedResponse.charAt(4) != command.getCode().charAt(0) || !normalizedCommand.startsWith(expectedPrefix)) {
+				throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_GATEWAY.value());
 			}
-			default -> throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.NOT_FOUND.value());
-		};
+			return normalizedResponse.substring(expectedPrefix.length());
+		}
+		// Handle STATUS response
+		if (statusResponseHeader.equals(responseHeader)) {
+			if (normalizedResponse.charAt(3) == Constant.NEGATIVE_ACK) {
+				throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.BAD_REQUEST.value());
+			}
+			return normalizedResponse;
+		}
+		throw new CommandFailureException(getAddress(), normalizedCommand, normalizedResponse, HttpStatus.NOT_FOUND.value());
 	}
 }
