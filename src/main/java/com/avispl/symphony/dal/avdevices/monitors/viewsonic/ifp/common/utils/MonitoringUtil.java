@@ -128,7 +128,7 @@ public final class MonitoringUtil {
 			case INPUT_SOURCE -> InputSource.getNameByCode(deviceSetting.getInputSource());
 //			case PIP_MODE -> mapToDefaultStatus(deviceGeneralSetting.getPipMode());
 			case TILING_MODE -> mapToDefaultStatus(deviceSetting.getTilingMode());
-			case VOLUME -> Integer.parseInt(deviceSetting.getVolume());
+			case VOLUME -> deviceSetting.getVolume();
 			case MUTE -> mapToDefaultStatus(deviceSetting.getMute());
 		};
 		if (value == null) {
@@ -151,15 +151,16 @@ public final class MonitoringUtil {
 			LOG.warn("Skip display mapping, the device display data is null with %s".formatted(display));
 			return null;
 		}
+
 		var value = switch (display) {
 			case BACKLIGHT_STATUS -> mapToDefaultStatus(deviceDisplay.getBacklightStatus());
-			case BACKLIGHT -> Integer.parseInt(deviceDisplay.getBacklight());
-//			case BLUE_LIGHT_FILTER -> Integer.parseInt(deviceDisplay.getBluelightFilter());
-			case BRIGHTNESS -> Integer.parseInt(deviceDisplay.getBrightness());
-			case COLOR -> Integer.parseInt(deviceDisplay.getColor());
-			case CONTRAST -> Integer.parseInt(deviceDisplay.getContrast());
-//			case HUE -> Integer.parseInt(deviceDisplay.getTint());
-//			case SHARPNESS -> Integer.parseInt(deviceDisplay.getSharpness());
+			case BACKLIGHT -> deviceDisplay.getBacklight();
+//			case BLUE_LIGHT_FILTER -> deviceDisplay.getBluelightFilter();
+			case BRIGHTNESS -> deviceDisplay.getBrightness();
+			case COLOR -> deviceDisplay.getColor();
+			case CONTRAST -> deviceDisplay.getContrast();
+//			case HUE -> deviceDisplay.getTint();
+//			case SHARPNESS -> deviceDisplay.getSharpness();
 		};
 		if (value == null) {
 			LOG.warn("Skip display mapping, the mapped value is null with %s".formatted(display));
@@ -180,7 +181,7 @@ public final class MonitoringUtil {
 	}
 
 	private static String mapToStatus(String value, String offValue, String onValue) {
-		if (StringUtils.isNullOrEmpty(value) || Util.isNonNumeric(value)) {
+		if (StringUtils.isNullOrEmpty(value) || Util.isNonInt(value)) {
 			return null;
 		}
 		return switch (value) {
@@ -226,15 +227,18 @@ public final class MonitoringUtil {
 			return null;
 		}
 		if (value instanceof String str) {
-			if (StringUtils.isNullOrEmpty(str)) {
+			if (StringUtils.isNullOrEmpty(str, true)) {
 				return null;
 			}
-			if (Util.isBooleanValue(str)) {
+			if (Util.isBoolean(str)) {
 				return str.toLowerCase();
+			}
+			if (Util.isInt(str))	{
+				return String.valueOf(Integer.parseInt(str));
 			}
 			return isTitleCase ? toTitleCase(str) : str;
 		}
-		if (value instanceof Boolean || value instanceof Integer) {
+		if (value instanceof Boolean) {
 			return value.toString();
 		}
 
@@ -257,7 +261,7 @@ public final class MonitoringUtil {
 			LOG.warn(Constant.INVALID_VALUE_WARNING.formatted(value));
 			return null;
 		}
-		if (Util.isBooleanValue(value)) {
+		if (Util.isBoolean(value)) {
 			return value;
 		}
 

@@ -161,6 +161,7 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 				this.send(SettingCommand.SET_MUTE, ControlUtil.getStatusValue(controllableProperty.getValue()));
 			}
 		} finally {
+			this.disconnect();
 			this.reentrantLock.unlock();
 		}
 	}
