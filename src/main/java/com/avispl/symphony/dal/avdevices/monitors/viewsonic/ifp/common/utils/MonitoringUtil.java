@@ -292,15 +292,15 @@ public final class MonitoringUtil {
 			long days = uptimeSecond / 86400;
 			StringBuilder rs = new StringBuilder();
 			if (days > 0) {
-				rs.append(days).append(" day(s) ");
+				rs.append(days).append(" d ");
 			}
 			if (hours > 0) {
-				rs.append(hours).append(" hour(s) ");
+				rs.append(hours).append(" hr ");
 			}
 			if (minutes > 0) {
-				rs.append(minutes).append(" minute(s) ");
+				rs.append(minutes).append(" min ");
 			}
-			rs.append(seconds).append(" second(s)");
+			rs.append(seconds).append(" sec");
 
 			return rs.toString().trim();
 		} catch (Exception e) {
