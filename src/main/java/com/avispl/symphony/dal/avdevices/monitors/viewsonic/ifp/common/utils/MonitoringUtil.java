@@ -273,10 +273,10 @@ public final class MonitoringUtil {
 	 * <p>
 	 * The input timestamp represents the start time in milliseconds (typically from {@link System#currentTimeMillis()}).
 	 * The returned string represents the absolute duration in the format:
-	 * "X day(s) Y hour(s) Z minute(s) W second(s)", omitting any zero-value units except seconds.
+	 * "X d Y hr Z min W sec", omitting any zero-value units except seconds.
 	 *
 	 * @param uptime the start time in milliseconds as a string (e.g., "1717581000000")
-	 * @return a formatted duration string like "2 day(s) 3 hour(s) 15 minute(s) 42 second(s)", or null if parsing fails
+	 * @return a formatted duration string like "2 d 3 hr 15 min 42 sec", or null if parsing fails
 	 */
 	private static String mapToUptime(String uptime) {
 		try {
@@ -292,15 +292,15 @@ public final class MonitoringUtil {
 			long days = uptimeSecond / 86400;
 			StringBuilder rs = new StringBuilder();
 			if (days > 0) {
-				rs.append(days).append(" day(s) ");
+				rs.append(days).append(" d ");
 			}
 			if (hours > 0) {
-				rs.append(hours).append(" hour(s) ");
+				rs.append(hours).append(" hr ");
 			}
 			if (minutes > 0) {
-				rs.append(minutes).append(" minute(s) ");
+				rs.append(minutes).append(" min ");
 			}
-			rs.append(seconds).append(" second(s)");
+			rs.append(seconds).append(" sec");
 
 			return rs.toString().trim();
 		} catch (Exception e) {

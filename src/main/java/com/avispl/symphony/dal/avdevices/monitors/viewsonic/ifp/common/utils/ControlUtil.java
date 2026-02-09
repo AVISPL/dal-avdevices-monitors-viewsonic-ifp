@@ -75,23 +75,32 @@ public final class ControlUtil {
 	 * Generates a list of {@link AdvancedControllableProperty} for the given {@link DeviceDisplay}.
 	 *
 	 * @param deviceDisplay the {@link DeviceDisplay} to build controllers from; if null, an empty list is returned
+	 * @param deviceSettings the {@link DeviceSetting} to rely on while building display controls; if null, an empty list is returned
 	 * @return list of controllable properties for the display
 	 */
-	public static List<AdvancedControllableProperty> getDisplayControllers(DeviceDisplay deviceDisplay) {
+	public static List<AdvancedControllableProperty> getDisplayControllers(DeviceDisplay deviceDisplay, DeviceSetting deviceSettings) {
 		if (deviceDisplay == null) {
 			LOG.warn("Skip display controllable properties retrieval, the device display data is null");
 			return Collections.emptyList();
 		}
-		return List.of(
-				createSwitch(Display.BACKLIGHT_STATUS.getPropertyName(), Util.toInt(deviceDisplay.getBacklightStatus())),
-				createSlider(Display.BACKLIGHT.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBacklight())),
-//				createSlider(Display.BLUE_LIGHT_FILTER.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBluelightFilter())),
-				createSlider(Display.BRIGHTNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBrightness())),
-				createSlider(Display.COLOR.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getColor())),
-				createSlider(Display.CONTRAST.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getContrast()))
-//				createSlider(Display.HUE.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getTint())),
-//				createSlider(Display.SHARPNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getSharpness()))
-		);
+		if(InputSource.EMBEDDED_ANDROID.getActiveCode().equals(deviceSettings.getInputSource()) ||
+				InputSource.EMBEDDED_ANDROID.getCode().equals(deviceSettings.getInputSource())) {
+			return List.of(
+					createSwitch(Display.BACKLIGHT_STATUS.getPropertyName(), Util.toInt(deviceDisplay.getBacklightStatus())),
+					createSlider(Display.BACKLIGHT.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBacklight()))
+			);
+		} else {
+			return List.of(
+					createSwitch(Display.BACKLIGHT_STATUS.getPropertyName(), Util.toInt(deviceDisplay.getBacklightStatus())),
+					createSlider(Display.BACKLIGHT.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBacklight())),
+	//				createSlider(Display.BLUE_LIGHT_FILTER.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBluelightFilter())),
+					createSlider(Display.BRIGHTNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBrightness())),
+					createSlider(Display.COLOR.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getColor())),
+					createSlider(Display.CONTRAST.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getContrast()))
+	//				createSlider(Display.HUE.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getTint())),
+	//				createSlider(Display.SHARPNESS.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getSharpness()))
+			);
+		}
 	}
 
 	/**

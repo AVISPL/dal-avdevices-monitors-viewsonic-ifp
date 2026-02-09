@@ -104,17 +104,17 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 					AdapterMetadata.values(), Constant.ADAPTER_METADATA_GROUP,
 					property -> MonitoringUtil.mapToAdapterMetadata(this.versionProperties, property)
 			));
-			if (this.shouldShowGroup(Constant.DISPLAY_GROUP)) {
-				statistics.putAll(MonitoringUtil.generateProperties(
-						Display.values(), Constant.DISPLAY_GROUP, property -> MonitoringUtil.mapToDisplay(this.deviceDisplay, property)
-				));
-				controllableProperties.addAll(ControlUtil.getDisplayControllers(this.deviceDisplay));
-			}
 			if (this.shouldShowGroup(Constant.SETTING_GROUP)) {
 				statistics.putAll(MonitoringUtil.generateProperties(
 						Settings.values(), Constant.SETTING_GROUP, property -> MonitoringUtil.mapToGeneralSettings(this.deviceSetting, property)
 				));
 				controllableProperties.addAll(ControlUtil.getGeneralSettingsControllers(this.deviceSetting));
+			}
+			if (this.shouldShowGroup(Constant.DISPLAY_GROUP)) {
+				statistics.putAll(MonitoringUtil.generateProperties(
+						Display.values(), Constant.DISPLAY_GROUP, property -> MonitoringUtil.mapToDisplay(this.deviceDisplay, property)
+				));
+				controllableProperties.addAll(ControlUtil.getDisplayControllers(this.deviceDisplay, this.deviceSetting));
 			}
 
 			this.localExtendedStatistics.setStatistics(statistics);
@@ -219,8 +219,8 @@ public class ViewSonicCommunicator extends BaseCommunicator implements Monitorab
 //		this.deviceDisplay.setBluelightFilter(this.send(DisplayCommand.GET_BLUE_LIGHT_FILTER));
 			this.deviceDisplay.setBrightness(this.send(DisplayCommand.GET_BRIGHTNESS));
 			this.deviceDisplay.setColor(this.send(DisplayCommand.GET_COLOR));
-//		this.deviceDisplay.setColorMode(this.send(DisplayCommand.GET_COLOR_MODE));
 			this.deviceDisplay.setContrast(this.send(DisplayCommand.GET_CONTRAST));
+//		this.deviceDisplay.setColorMode(this.send(DisplayCommand.GET_COLOR_MODE));
 //		this.deviceDisplay.setTint(this.send(DisplayCommand.GET_TINT));
 //		this.deviceDisplay.setSharpness(this.send(DisplayCommand.GET_SHARPNESS));
 		}
