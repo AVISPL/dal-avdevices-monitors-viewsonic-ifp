@@ -83,8 +83,8 @@ public final class ControlUtil {
 			LOG.warn("Skip display controllable properties retrieval, the device display data is null");
 			return Collections.emptyList();
 		}
-		if(InputSource.EMBEDDED_ANDROID.getCode().equals(deviceSettings.getInputSource()) ||
-				Constant.CODE_EMBEDDED_ANDROID_ACTIVE.equals(deviceSettings.getInputSource())) {
+		if(InputSource.EMBEDDED_ANDROID.getActiveCode().equals(deviceSettings.getInputSource()) ||
+				InputSource.EMBEDDED_ANDROID.getCode().equals(deviceSettings.getInputSource())) {
 			return List.of(
 					createSwitch(Display.BACKLIGHT_STATUS.getPropertyName(), Util.toInt(deviceDisplay.getBacklightStatus())),
 					createSlider(Display.BACKLIGHT.getPropertyName(), Constant.PERCENTAGE_MIN, Constant.PERCENTAGE_MAX, Util.toFloat(deviceDisplay.getBacklight()))
