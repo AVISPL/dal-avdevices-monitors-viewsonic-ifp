@@ -4,6 +4,7 @@ package com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.types;
 import java.util.Arrays;
 import java.util.List;
 
+import com.avispl.symphony.dal.avdevices.monitors.viewsonic.ifp.common.constants.Constant;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +64,7 @@ public enum InputSource {
 		if (StringUtils.isNullOrEmpty(code)) {
 			return null;
 		}
-		return "10A".equals(code) ? EMBEDDED_ANDROID.name : Arrays.stream(values())
+		return Constant.CODE_EMBEDDED_ANDROID_ACTIVE.equals(code) ? EMBEDDED_ANDROID.name : Arrays.stream(values())
 				.filter(source -> source.code.equalsIgnoreCase(code)).map(InputSource::getName)
 				.findFirst().orElse(null);
 	}

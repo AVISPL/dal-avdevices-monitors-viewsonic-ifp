@@ -19,6 +19,9 @@ public final class Constant {
 	public static final String MAC_PAIR_REGEX = "..(?!$)";
 	public static final String MAC_SEPARATOR_REPLACEMENT = "$0:";
 
+	//Response codes
+	public static final String CODE_EMBEDDED_ANDROID_ACTIVE = "10A";
+
 	//	Special characters
 	public static final String CR = "\r";
 	public static final String EMPTY = "";
